@@ -13,9 +13,11 @@
 
 <body>
   <!-- header image -->
-  <img src="https://best-alzheimers-products.com/wp-content/uploads/2018/04/alzheimers-diseases-stages_1500x630.jpg" alt="bad pic" class="center" style="width:1500px;height:400px">
+  <!-- <img src="https://best-alzheimers-products.com/wp-content/uploads/2018/04/alzheimers-diseases-stages_1500x630.jpg" alt="bad pic" class="center" style="width:1500px;height:400px"> -->
   <!-- Nav bar -->
   <div class="container-fluid">
+    <img src="{{ url_for('static', filename='images/banner1.jpg') }}" alt="bad pic" class="center" style="width:100%;height:auto%">
+
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
 
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,7 +32,7 @@
             <a class="nav-link" href="data.html">Data</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="models.html">Models</a>
+            <a class="nav-link" href="/models">Models</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="demographics.html">Demographics</a>
@@ -47,7 +49,7 @@
     </nav> <!-- end of nav bar -->
 
     <div class="row">
-      <div class="col-xs-12 col-lg-4">
+      <div class="col-xs-12 col-lg-3">
         <form action="/models" method="POST" enctype="multipart/form-data">
           Model
           <select id="model" name="model">
@@ -94,7 +96,7 @@
 
         </form>
       </div>
-      <div class="col-xs-12 col-lg-8">
+      <div class="col-xs-12 col-lg-9">
         <br><br>
         <h4 class='centered'>
           Score: {{ score }}
