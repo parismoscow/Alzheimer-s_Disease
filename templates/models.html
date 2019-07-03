@@ -6,6 +6,8 @@
   <title>Alzheimer's Disease</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 
 </head>
 
@@ -44,62 +46,65 @@
 
     </nav> <!-- end of nav bar -->
 
+    <div class="row">
+      <div class="col-xs-12 col-lg-4">
+        <form action="/models" method="POST" enctype="multipart/form-data">
+          Model
+          <select id="model" name="model">
+            <option value="rf">Random Forest</option>
+            <option value="svc">SVC</option>
+            <option value="lr">Logistic Regression</option>
+            <option value="dnn">Deep Neural Net</option>
+          </select>
+          <br><br>
+          <!-- <h4>Prediction</h4> -->
+          Prediction
+          <select id="prediction" name="prediction">
+            <option value="DX">Current Diagnosis</option>
+            <option value="final_DX">Future Diagnosis</option>
+          </select>
+          <br><br>
+          <!-- <h4>Oversampling</h4> -->
+          Oversampling
+          <select id="oversampling" name="oversampling">
+            <option value="smote">SMOTE</option>
+            <option value="random">Random</option>
+          </select>
+          <br><br>
+          <!-- <h4>Scaling</h4> -->
+          Scaling
+          <select id="scaling" name="scaling">
+            <option value="standard">Standard</option>
+            <option value="minmax">MinMax</option>
+          </select>
+          <br><br>
+          Data Subset
+          <br>
+          <input type="checkbox" name="demographic" value="demographic" checked> Demographic<br>
+          <input type="checkbox" name="apoe4" value="apoe4" checked> APOE4<br>
+          <input type="checkbox" name='cogtest' value=cogtest checked> Cognitive Tests <br>
+          <input type="checkbox" name="mri" value="mri"> MRI<br>
+          <input type="checkbox" name="mripct" value="mripct"> MRI with % change<br>
+          <input type="checkbox" name="pet" value="pet" checked> PET<br>
+          <input type="checkbox" name="csf" value="csf"> CSF<br>
 
-    <form action="/models" method="POST" enctype="multipart/form-data">
-
-
-      <!-- <h4>Model</h4> -->
-      Model
-      <select id="model" name="model">
-        <option value="rf">Random Forest</option>
-        <option value="svc">SVC</option>
-        <option value="lr">Logistic Regression</option>
-        <option value="dnn">Deep Neural Net</option>
-      </select>
-      <br><br>
-      <!-- <h4>Prediction</h4> -->
-      Prediction
-      <select id="prediction" name="prediction">
-        <option value="DX">Current Diagnosis</option>
-        <option value="final_DX">Future Diagnosis</option>
-      </select>
-      <br><br>
-      <!-- <h4>Oversampling</h4> -->
-      Oversampling
-      <select id="oversampling" name="oversampling">
-        <option value="smote">SMOTE</option>
-        <option value="random">Random</option>
-      </select>
-      <br><br>
-      <!-- <h4>Scaling</h4> -->
-      Scaling
-      <select id="scaling" name="scaling">
-        <option value="standard">Standard</option>
-        <option value="minmax">MinMax</option>
-      </select>
-      <br><br>
-      Data Subset
-      <br>
-      <input type="checkbox" name="demographic" value="demographic" checked> Demographic<br>
-      <input type="checkbox" name="apoe4" value="apoe4" checked> APOE4<br>
-      <input type="checkbox" name='cogtest' value=cogtest checked> Cognitive Tests <br>
-      <input type="checkbox" name="mri" value="mri"> MRI<br>
-      <input type="checkbox" name="mripct" value="mripct"> MRI with % change<br>
-      <input type="checkbox" name="pet" value="pet" checked> PET<br>
-      <input type="checkbox" name="csf" value="csf"> CSF<br>
-
-      <br><br>
-      <p><input type="submit" value="submit" /></p>
+          <br><br>
+          <p><input type="submit" value="submit" /></p>
 
 
-    </form>
-
-    {% for key, value in metrics.items() %}
-    {{ key }}: {{ value }} <br>
-    {% endfor %}
-
-    Model name: {{ model_name }}
-
+        </form>
+      </div>
+      <div class="col-xs-12 col-lg-8">
+        <br><br>
+        <h4 class='centered'>
+          Score: {{ score }}
+        </h4>
+        <h5 class='centered'>
+          Training set size: {{ size }}
+        </h5>
+        {{ div|safe }}
+      </div>
+    </div>
 
     <div>
       <div style="text-align:center">

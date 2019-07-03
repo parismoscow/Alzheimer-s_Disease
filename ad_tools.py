@@ -80,14 +80,16 @@ def get_dataset_name(dict):
         if (key != 'model') and (key != 'oversampling') and (key != 'scaling'):
             tag_elements.append(dict[key])
     tag = '_'.join(tag_elements)
+    # print("returning tag: ", tag)
     return tag
 
 
 def get_data(dataset_name, oversampling, scaling, prediction):
-    print("returning data from ", dataset_name,
-          'with ', oversampling, 'and', scaling)
-
-    df = pd.read_csv('Data/' + dataset_name + ".csv")
+    # print("returning data from ", dataset_name,
+    #       'with ', oversampling, 'and', scaling)
+    filename = 'Data/' + dataset_name + '.csv'
+    print('returning ', filename)
+    df = pd.read_csv(filename)
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
     X_train, X_test = scale_features(scaling, X_train, X_test)
@@ -101,7 +103,7 @@ def load_model(model_name):
 
 
 def evaluate_model(model, X_test, y_test):
-    print("in evaluate model, received ", X_test, y_test)
+    # print("in evaluate model, received ", X_test, y_test)
     score = round(model.score(X_test, y_test), 4)
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
@@ -126,9 +128,10 @@ def return_roc(y_test, y_score):
     roc_auc = dict()
     for i in range(n_classes):
         fpr[i], tpr[i], _ = roc_curve(y_bin[:, i], y_score[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
+        roc_auc[i] = round(auc(fpr[i], tpr[i]), 4)
         fpr[i] = fpr[i].tolist()
         tpr[i] = tpr[i].tolist()
+        # roc_auc[i]
     return roc_auc, fpr, tpr
 
 
@@ -193,16 +196,16 @@ def scale_features(scaler, X_train, X_test):
 
 
 def oversample(alg, X_train, y_train):
-    print('in oversample got ', X_train, y_train)
+    # print('in oversample got ', X_train, y_train)
     if alg == 'smote':
         smt = SMOTE()
         X_train, y_train = smt.fit_sample(X_train, y_train)
-        print('Resampled dataset shape %s' % Counter(y_train))
+        # print('Resampled dataset shape %s' % Counter(y_train))
         return X_train, y_train
     if alg == 'random':
         ros = RandomOverSampler(random_state=42)
         X_train, y_train = ros.fit_sample(X_train, y_train)
-        print('Resampled dataset shape %s' % Counter(y_train))
+        # print('Resampled dataset shape %s' % Counter(y_train))
         return X_train, y_train
 
 
