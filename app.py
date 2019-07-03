@@ -6,7 +6,7 @@ import plotly
 app = Flask(__name__)
 
 
-@app.route("/index")
+@app.route("/")
 def diseases():
     return render_template("index.html")
 
