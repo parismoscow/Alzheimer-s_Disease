@@ -45,41 +45,61 @@
     </nav> <!-- end of nav bar -->
 
 
-    <form action="/result" method="POST" enctype="multipart/form-data">
+    <form action="/models" method="POST" enctype="multipart/form-data">
 
 
-      <h4>Model</h4>
+      <!-- <h4>Model</h4> -->
+      Model
       <select id="model" name="model">
         <option value="rf">Random Forest</option>
         <option value="svc">SVC</option>
         <option value="lr">Logistic Regression</option>
         <option value="dnn">Deep Neural Net</option>
       </select>
-      <br>
-      <hr>
-      <h4>Prediction</h4>
+      <br><br>
+      <!-- <h4>Prediction</h4> -->
+      Prediction
       <select id="prediction" name="prediction">
-        <option value="dx">Current Diagnosis</option>
-        <option value="fdx">Fugure Diagnosis</option>
+        <option value="DX">Current Diagnosis</option>
+        <option value="final_DX">Future Diagnosis</option>
       </select>
-      <br>
-      <hr>
-      <h4>Oversampling</h4>
+      <br><br>
+      <!-- <h4>Oversampling</h4> -->
+      Oversampling
       <select id="oversampling" name="oversampling">
         <option value="smote">SMOTE</option>
         <option value="random">Random</option>
       </select>
-      <br>
-      <hr>
-      <h4>Scaling</h4>
+      <br><br>
+      <!-- <h4>Scaling</h4> -->
+      Scaling
       <select id="scaling" name="scaling">
         <option value="standard">Standard</option>
         <option value="minmax">MinMax</option>
       </select>
-      <hr><br>
+      <br><br>
+      Data Subset
+      <br>
+      <input type="checkbox" name="demographic" value="demographic" checked> Demographic<br>
+      <input type="checkbox" name="apoe4" value="apoe4" checked> APOE4<br>
+      <input type="checkbox" name='cogtest' value=cogtest checked> Cognitive Tests <br>
+      <input type="checkbox" name="mri" value="mri"> MRI<br>
+      <input type="checkbox" name="mripct" value="mripct"> MRI with % change<br>
+      <input type="checkbox" name="pet" value="pet" checked> PET<br>
+      <input type="checkbox" name="csf" value="csf"> CSF<br>
+
       <br><br>
       <p><input type="submit" value="submit" /></p>
+
+
     </form>
+
+    {% for key, value in metrics.items() %}
+    {{ key }}: {{ value }} <br>
+    {% endfor %}
+
+    Model name: {{ model_name }}
+
 
     <div>
       <div style="text-align:center">
