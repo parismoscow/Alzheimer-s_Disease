@@ -32,6 +32,9 @@ async function selectionChanged () {
   if (d3.select('#mri').property('checked')){
     dict['mri'] = d3.select('#mri').property('value')
   }
+  if (d3.select('#mripct').property('checked')){
+    dict['mripct'] = d3.select('#mripct').property('value')
+  }
   if (d3.select('#pet').property('checked')){
     dict['pet'] = d3.select('#pet').property('value')
   }

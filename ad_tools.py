@@ -62,9 +62,16 @@ def cleanup_data(dataset_name, df, drop, prediction):
     if 'cogtest' in dataset_lower:
         columns = columns + ['CDRSB', 'ADAS11',
                              'MMSE', 'ADAS13', 'RAVLT_immediate']
-    if 'mri' in dataset_lower:
+
+    # if 'mripct' in dataset_lower:
+    #     columns = columns + ['Ventricles', 'Hippocampus',
+    #                          'WholeBrain', 'Entorhinal', 'MidTemp',
+    #
+    if 'mripct' in dataset_lower:
         columns = columns + ['Ventricles', 'Hippocampus',
-                             'WholeBrain', 'Entorhinal', 'MidTemp']
+                             'WholeBrain', 'Entorhinal', 'MidTemp',
+                             'pct_Ventricles', 'pct_Hippocampus',
+                             'pct_WholeBrain', 'pct_Entorhinal', 'pct_MidTemp']
     if 'pet' in dataset_lower:
         columns = columns + ['FDG', 'AV45']
     if 'csv' in dataset_lower:
@@ -104,6 +111,7 @@ def get_dataset_name(dict):
 
 
 def get_data(dataset_name, oversampling, scaling, prediction):
+    print("Using dataset:", dataset_name)
     if prediction == 'DX':
         raw_data = 'Data/TADPOLE_D1_D2.csv'
     elif prediction == 'final_DX':
@@ -118,19 +126,13 @@ def get_data(dataset_name, oversampling, scaling, prediction):
             df = pd.read_csv(raw_data)
             drop = True
             df = cleanup_data(dataset_name, df, drop, prediction)
-            # print('in get_data, columns are', df.columns)
         except Exception as e:
             print("error: ", e)
 
-    print("before populate_X_y, preview", df.head(2))
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
-    print("after populate_X_y", len(X))
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    print("after train_test_split", len(X_train))
     X_train, X_test = scale_features(scaling, X_train, X_test)
-    print("after scale features", len(X_train))
     X_train, y_train = oversample(oversampling, X_train, y_train)
-    print("after oversample", len(X_train))
     return X_train, X_test, y_train, y_test
 
 
@@ -235,11 +237,9 @@ def add_sum_column(df):
 
 
 def add_final_dx_column(df):
-    print("add_final_dx_column getting df columns:", df.columns)
     for dx in ['Dementia', 'MCI', "NL"]:
         if dx in df['DX'].values:
             df['final_DX'] = dx
-            print("add_final_dx_column returning df columns:", df.columns)
             return df
     return df
 
@@ -250,20 +250,17 @@ def show_data(df, category):
 
 
 def populate_X_y(df, y_cat, encode_list):
-    print("entering populatexy, size", len(df[y_cat]))
     y = df[y_cat]
     X = df.drop(columns=[y_cat, 'PTID'])
 #   X = df.drop(columns=[y_cat, 'PTID'])
 # todo replace following line with one above
 #   X = df.drop(columns=[y_cat])
-    print("in populatexy, before encoding,  size", len(X))
     label_encoder = LabelEncoder()
     for label in encode_list:
         if label in X:
             encode = X[label]
             label_encoder.fit(encode)
             X[label] = label_encoder.transform(encode)
-    print("in populatexy, after encoding,  size", len(X))
 
     return X, y
 
