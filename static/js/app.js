@@ -87,9 +87,9 @@ async function selectionChanged () {
   if (d3.select('#mri').property('checked')){
     dict['mri'] = d3.select('#mri').property('value')
   }
-  if (d3.select('#mripct').property('checked')){
-    dict['mripct'] = d3.select('#mripct').property('value')
-  }
+  // if (d3.select('#mripct').property('checked')){
+  //   dict['mripct'] = d3.select('#mripct').property('value')
+  // }
   if (d3.select('#pet').property('checked')){
     dict['pet'] = d3.select('#pet').property('value')
   }
@@ -128,13 +128,23 @@ async function selectionChanged () {
   // console.log(`returning ${temp}`)
 
   const modelStats = await d3.json(`/getdata/${temp}`)
+  if (modelStats['success']) {
+    data = modelStats['data']
+    layout = modelStats['layout']
+    Plotly.newPlot("roc_curve", data, layout)
+    d3.select("#class_report").html(modelStats['class_report'])
+    console.log(modelStats['class_report']);
+  }
+  else {
+    const modelStats = await d3.json(`/newmodel/${temp}`)
+    console.log("This model is not available");
+  }
   // console.log(`received ${data} back from python`);
-  data = modelStats['data']
-  layout = modelStats['layout']
-  console.log(`layout is: ${layout}`);
+
+  // console.log(`layout is: ${layout}`);
   // layout =
 
-  Plotly.newPlot("roc_curve", data, layout)
+
 }
 
 // Initialize the dashboard

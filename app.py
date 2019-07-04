@@ -12,55 +12,70 @@ def diseases():
     return render_template("index.html")
 
 
+# @app.route("newmodel/<dict>")
+# def makemodel(dict):
+    # check if data is available
+    # if not call to /generatedataset
+    # if data available call to makemodel
+    # save model
+
+
 @app.route("/getdata/<dict>")
 def getdata(dict):
+    success = 0
     print("in getdata, received dict ", dict)
     # result = request.form
     result = json.loads(dict)
-    print(result)
+    # print(result)
     oversampling = result['oversampling']
     scaling = result['scaling']
     prediction = result['prediction']
     model_name = adt.return_model_name(result)
     dataset_name = adt.get_dataset_name(result)
-    X_train, X_test, y_train, y_test = adt.get_data(
-        dataset_name, oversampling, scaling, prediction)
-    model = adt.load_model(model_name)
-    metrics = adt.evaluate_model(model, X_test, y_test)
-    score = metrics['score']
-    size = len(X_train)
-    data = [
-        {"x": metrics['fpr'][0], "y": metrics['tpr']
-            [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
-        {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
-            "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
-        {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
-            "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
-    ]
 
-    layout = {
-        'title': 'Score: ' + str(score),
-        'xaxis': {
+    try:
+        X_train, X_test, y_train, y_test = adt.get_data(
+            dataset_name, oversampling, scaling, prediction)
+        model = adt.load_model(model_name)
+        metrics = adt.evaluate_model(model, X_test, y_test)
+        class_report = metrics['class_report']
+        score = metrics['score']
+        size = len(X_train)
+        data = [
+            {"x": metrics['fpr'][0], "y": metrics['tpr']
+             [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
+            {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
+             "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
+            {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
+             "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
+        ]
+        layout = {
             'title': {
-                'text': 'False Positive Rate'
-            }
-        },
-        'yaxis': {
-            'title': {
-                'text': 'True Positive Rate'
+                'text': 'Score: ' + str(score) + '<br>Training set size: ' + str(size)
+            },
+            'xaxis': {
+                'title': {
+                    'text': 'False Positive Rate'
+                }
+            },
+            'yaxis': {
+                'title': {
+                    'text': 'True Positive Rate'
+                }
             }
         }
-    }
-
-    response = {
-        'data': data,
-        'score': score,
-        'size': size,
-        'layout': layout
-    }
-
-    # div = plotly.offline.plot(
-    #     data, include_plotlyjs=False, output_type='div')
+        response = {
+            'data': data,
+            'score': score,
+            'class_report': class_report,
+            'size': size,
+            'layout': layout,
+            'success': 1
+        }
+    except:
+        response = {
+            'success': 0
+        }
 
     return jsonify(response)
 

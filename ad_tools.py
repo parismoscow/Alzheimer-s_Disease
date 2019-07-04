@@ -107,11 +107,12 @@ def evaluate_model(model, X_test, y_test):
     score = round(model.score(X_test, y_test), 4)
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
+    class_report = classification_report(y_test, predictions)
     roc_auc, fpr, tpr = return_roc(y_test, model.predict_proba(X_test))
 
     metrics = {
         'score': score,
-        'confmatrix': confmatrix,
+        'class_report': class_report,
         'roc_auc': roc_auc,
         'fpr': fpr,
         'tpr': tpr
