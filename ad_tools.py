@@ -37,22 +37,22 @@ def cleanup_data(df, drop):
         df.fillna(value=0, inplace=True)
 
     if 'ABETA_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['ABETA_UPENNBIOMK9_04_19_17'] ==
-               '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
+        df.loc[df['ABETA_UPENNBIOMK9_04_19_17']
+               == '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
         df['ABETA_UPENNBIOMK9_04_19_17'] = df['ABETA_UPENNBIOMK9_04_19_17'].astype(
             float)
     if 'TAU_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['TAU_UPENNBIOMK9_04_19_17'] ==
-               '>1300', 'TAU_UPENNBIOMK9_04_19_17'] = 1301
-        df.loc[df['TAU_UPENNBIOMK9_04_19_17'] ==
-               '<80', 'TAU_UPENNBIOMK9_04_19_17'] = 79
+        df.loc[df['TAU_UPENNBIOMK9_04_19_17']
+               == '>1300', 'TAU_UPENNBIOMK9_04_19_17'] = 1301
+        df.loc[df['TAU_UPENNBIOMK9_04_19_17']
+               == '<80', 'TAU_UPENNBIOMK9_04_19_17'] = 79
         df['TAU_UPENNBIOMK9_04_19_17'] = df['TAU_UPENNBIOMK9_04_19_17'].astype(
             float)
     if 'PTAU_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['PTAU_UPENNBIOMK9_04_19_17'] ==
-               '>120', 'PTAU_UPENNBIOMK9_04_19_17'] = 121
-        df.loc[df['PTAU_UPENNBIOMK9_04_19_17'] ==
-               '<8', 'PTAU_UPENNBIOMK9_04_19_17'] = 7
+        df.loc[df['PTAU_UPENNBIOMK9_04_19_17']
+               == '>120', 'PTAU_UPENNBIOMK9_04_19_17'] = 121
+        df.loc[df['PTAU_UPENNBIOMK9_04_19_17']
+               == '<8', 'PTAU_UPENNBIOMK9_04_19_17'] = 7
         df['PTAU_UPENNBIOMK9_04_19_17'] = df['PTAU_UPENNBIOMK9_04_19_17'].astype(
             float)
 
@@ -80,15 +80,11 @@ def get_dataset_name(dict):
         if (key != 'model') and (key != 'oversampling') and (key != 'scaling'):
             tag_elements.append(dict[key])
     tag = '_'.join(tag_elements)
-    # print("returning tag: ", tag)
     return tag
 
 
 def get_data(dataset_name, oversampling, scaling, prediction):
-    # print("returning data from ", dataset_name,
-    #       'with ', oversampling, 'and', scaling)
     filename = 'Data/' + dataset_name + '.csv'
-    print('returning ', filename)
     df = pd.read_csv(filename)
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
@@ -100,6 +96,52 @@ def get_data(dataset_name, oversampling, scaling, prediction):
 def load_model(model_name):
     model = pickle.load(open('Models/' + model_name + ".sav", 'rb'))
     return model
+
+
+def eval_and_report(model, X_test, y_test, size):
+    try:
+        metrics = evaluate_model(model, X_test, y_test)
+        class_report = metrics['class_report']
+        score = metrics['score']
+        # size = len(X_train)
+        data = [
+            {"x": metrics['fpr'][0], "y": metrics['tpr']
+             [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
+            {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
+             "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
+            {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
+             "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
+        ]
+        layout = {
+            'title': {
+                'text': 'Score: ' + str(score) + '<br>Training set size: ' + str(size)
+            },
+            'xaxis': {
+                'title': {
+                    'text': 'False Positive Rate'
+                }
+            },
+            'yaxis': {
+                'title': {
+                    'text': 'True Positive Rate'
+                }
+            }
+        }
+        response = {
+            'data': data,
+            'score': score,
+            'class_report': class_report,
+            'size': size,
+            'layout': layout,
+            'success': 1
+        }
+    except Exception as e:
+        print("inside eval_and_report, issue with model", e)
+        response = {
+            'success': 0
+        }
+    # print("returning to js: ", jsonify(response))
+    return (response)
 
 
 def evaluate_model(model, X_test, y_test):
@@ -209,23 +251,28 @@ def oversample(alg, X_train, y_train):
         # print('Resampled dataset shape %s' % Counter(y_train))
         return X_train, y_train
 
+# def save_model()
 
-def run_model(model_name, X_train, X_test, y_train, y_test):
+
+def train_model(model_name, X_train, y_train):
+    # print("in run_model received model_name: ", model_name)
     if 'svc' in model_name.lower():
-        model = SVC(kernel='linear')
+        model = SVC(kernel='linear', probability=True)
 
-    elif 'random forest' in model_name.lower():
+    elif 'random forest' in model_name.lower() or 'rf' in model_name.lower():
         model = RandomForestClassifier(n_estimators=200)
 
-    elif 'logistic regression' in model_name.lower():
+    elif 'logistic regression' in model_name.lower() or 'lr' in model_name.lower():
         model = LogisticRegression()
 
+    # print("start training model...")
     model.fit(X_train, y_train)
-    print("*************", model_name, "*************\n",
-          "\nScore is: ", model.score(X_test, y_test), "\n")
-    predictions = model.predict(X_test)
-    print("\nConfusion matrix\n", confusion_matrix(y_test, predictions))
-    print("\n", classification_report(y_test, predictions))
-#   print("\n", classification_report(y_test, predictions, target_names=["NL to NL", "MCI to MCI", "AD to AD", "NL to MCI", "MCI to AD" ]))
+#     print("*************", model_name, "*************\n",
+#           "\nScore is: ", model.score(X_test, y_test), "\n")
+#     predictions = model.predict(X_test)
+#     print("\nConfusion matrix\n", confusion_matrix(y_test, predictions))
+#     print("\n", classification_report(y_test, predictions))
+# #   print("\n", classification_report(y_test, predictions, target_names=["NL to NL", "MCI to MCI", "AD to AD", "NL to MCI", "MCI to AD" ]))
+    # print("finished training model...")
 
     return model

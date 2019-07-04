@@ -1,76 +1,20 @@
-function init() {
-  // Grab a reference to the dropdown select element
-  // var selector = d3.select("#selDataset");
-  //
-  // // Use the list of sample names to populate the select options
-  // d3.json("/names").then((sampleNames) => {
-  //   sampleNames.forEach((sample) => {
-  //     selector
-  //       .append("option")
-  //       .text(sample)
-  //       .property("value", sample);
-  //   });
-  //
-  //   // Use the first sample from the list to build the initial plots
-  //   const firstSample = sampleNames[0];
-  //   buildCharts(firstSample);
-  //   buildMetadata(firstSample);
-  // });
-  selectionChanged()
+function displayReport(modelStats) {
+  data = modelStats['data']
+  layout = modelStats['layout']
+  Plotly.newPlot("roc_curve", data, layout)
+  d3.select("#class_report").html(modelStats['class_report'])
+  console.log(modelStats['class_report']);
 }
-
-async function buildCharts(sample) {
-
-  const thisSample = await d3.json(`/samples/${sample}`)
-
-  // create an array of objects for easier sorting
-  let sampleList = []
-
-  for (i=0; i<thisSample.sample_values.length; i++) {
-    sampleObject = {
-      "otu_ids": thisSample.otu_ids[i],
-      "otu_labels": thisSample.otu_labels[i],
-      "sample_values": thisSample.sample_values[i]
-    }
-    sampleList.push(sampleObject)
-  }
-
-  // sort the array on sample_values, in descending order
-  sampleList = sampleList.sort(function(a,b) {
-    return b.sample_values - a.sample_values
-  })
-
-  buildPie(sampleList.slice(0,10))
-  buildBubble(sampleList, sample)
-}
-
-function buildPie (data) {
-  otu_ids =  unpack(data, "otu_ids")
-  otu_labels = unpack(data, "otu_labels")
-  sample_values = unpack(data, "sample_values")
-
-  const trace = {
-    values: sample_values,
-    labels: otu_ids,
-    names: otu_labels,
-    type: "pie",
-    mode: 'markers',
-    hovertext: otu_labels,
-    hoverinfo: 'label+percent+text',
-  }
-  // display the pie chart
-  data = [trace]
-  Plotly.newPlot("pie", data);
-}
-
 
 async function selectionChanged () {
   // Fetch new data each time a new selection is made
-  // var Selections = ['model', 'prediction', 'oversampling', 'scaling']
-  // var dataSet = ['demographic', 'apoe4', 'cogtest', 'mri', 'mripct', 'pet', 'csf']
-  // var temparr = []
   const dict  = {}
+  // clear LogisticRegression
+  d3.select('#status').text("")
+  d3.select('#roc_curve').text("")
+  d3.select('#class_report').text("")
 
+  // create dictionary of user selection
   dict['model'] = d3.select('#model').property('value')
   dict['prediction'] = d3.select('#prediction').property('value')
   dict['oversampling'] = d3.select('#oversampling').property('value')
@@ -87,9 +31,6 @@ async function selectionChanged () {
   if (d3.select('#mri').property('checked')){
     dict['mri'] = d3.select('#mri').property('value')
   }
-  // if (d3.select('#mripct').property('checked')){
-  //   dict['mripct'] = d3.select('#mripct').property('value')
-  // }
   if (d3.select('#pet').property('checked')){
     dict['pet'] = d3.select('#pet').property('value')
   }
@@ -97,56 +38,30 @@ async function selectionChanged () {
     dict['csf'] = d3.select('#csf').property('value')
   }
 
-// console.log(dict);
-  // Selections.forEach(function(selection) {
-  //   const id = `#${selection}`
-  //   // d3.select("#selDataset")
-  //   value = d3.select(`${id}`).property('value')
-  //   // console.log(value);
-  //   dict[selection] = value
-  //   console.log(`setting dict[${selection}] to ${dict[selection]}`)
-  //   console.log(`returning ${dict[sampling]}`)
-  //
-  //   // temparr.push(value)
-  // });
-  //
-  // dataSet.forEach(function(selection){
-  //   checkbox = d3.select(`#${selection}`)
-  //   if (checkbox.property('checked')) {
-  //     dict[selection] = checkbox.property('value')
-  //     console.log(`setting dict[${selection}] to ${dict[selection]}`)
-  //
-  //     // temparr.push(checkbox.property('value'))
-  //   }
-  // })
-  // console.log(`returning ${dict[sampling]}`)
+  // try to obtain data from an existing model
   temp = JSON.stringify(dict);
-  // console.log(JSON.stringify({ x: 5, y: 6 }));
-
-  // const dict2 = {'key': 'value'}
-// temp = JSON.stringify(dict2);
-  // console.log(`returning ${temp}`)
-
   const modelStats = await d3.json(`/getdata/${temp}`)
+  // if successful display model stats
   if (modelStats['success']) {
-    data = modelStats['data']
-    layout = modelStats['layout']
-    Plotly.newPlot("roc_curve", data, layout)
-    d3.select("#class_report").html(modelStats['class_report'])
-    console.log(modelStats['class_report']);
+    displayReport(modelStats)
   }
+
   else {
+    // train a new model
+    d3.select('#status').text("training the model....")
     const modelStats = await d3.json(`/newmodel/${temp}`)
-    console.log("This model is not available");
+    d3.select('#status').text("")
+    if (modelStats['success'] == -1) {
+        d3.select('#status').text("The data set is not available")
+      console.log("this dataset is not available")
+    }
+    else if (modelStats['success'] == 0) {
+      d3.select('#status').text("There was an issue with obtaining the model ("+modelStats['error'] +")")
+      console.log("There was an issue with obtaining a model");
+    }
+    else {
+      // if successful display model stats
+      displayReport(modelStats)
+    }
   }
-  // console.log(`received ${data} back from python`);
-
-  // console.log(`layout is: ${layout}`);
-  // layout =
-
-
 }
-
-// Initialize the dashboard
-// init();
-// selectionChanged()

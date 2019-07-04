@@ -12,18 +12,57 @@ def diseases():
     return render_template("index.html")
 
 
-# @app.route("newmodel/<dict>")
-# def makemodel(dict):
+@app.route("/newmodel/<dict>")
+def newmodel(dict):
+    dict = json.loads(dict)
+    oversampling = dict['oversampling']
+    scaling = dict['scaling']
+    prediction = dict['prediction']
+    model_name = dict['model']
+
     # check if data is available
-    # if not call to /generatedataset
-    # if data available call to makemodel
+    dataset_name = adt.get_dataset_name(dict)
+    try:
+        X_train, X_test, y_train, y_test = adt.get_data(
+            dataset_name, oversampling, scaling, prediction)
+    except:
+        # if not call to /generatedataset
+        # print(dataset_name, " is not available")
+        response = {
+            'success': -1
+        }
+        return jsonify(response)
+
+    scaling = dict['scaling']
+    oversampling = dict['oversampling']
+    # if data available, scale if necessary
+    if scaling:
+        X_train, X_test = adt.scale_features(scaling, X_train, X_test)
+    # check if oversampling is needed
+    if oversampling:
+        adt.oversample(oversampling, X_train, y_train)
+    model_name = dict['model']
+    # train new model
+    try:
+        model = adt.train_model(model_name, X_train, y_train)
+    except Exception as e:
+        print("issue with new model")
+        response = {
+            'success': 0,
+            'error': str(e)
+        }
+        return jsonify(response)
+
+    response = adt.eval_and_report(model, X_test, y_test, len(X_train))
+    # response['size'] = len(X_train)
+    return jsonify(response)
     # save model
 
 
 @app.route("/getdata/<dict>")
 def getdata(dict):
     success = 0
-    print("in getdata, received dict ", dict)
+    # print("in getdata, received dict ", dict)
     # result = request.form
     result = json.loads(dict)
     # print(result)
@@ -82,28 +121,7 @@ def getdata(dict):
 
 @app.route('/models', methods=['POST', 'GET'])
 def models():
-    result = {}
-    model_name = ""
-    metrics = {}
-    data = []
-    div = ""
-    score = 0
-    size = 0
-
-    # if request.method == 'POST':
-
-    # # div = plotly.offline.plot(data, filename='file.html')
-    # data = [{
-    #     "x": metrics['fpr'][0],
-    #     "y": metrics['tpr'][0]}]
-    # return render_template("models.html", size=size, score=score, div=div)
-
     return render_template("models.html")
-    # return render_template("models.html", result=result, model_name=model_name, metrics=metrics)
-
-    # else:
-    #     return render_template("models.html")
-    # else:
 
 
 @app.route("/data")
@@ -119,11 +137,6 @@ def resources():
 @app.route("/treatment")
 def treatment():
     return render_template("treatment.html")
-
-
-# @app.route("/models")
-# def models():
-#     return render_template("models.html")
 
 
 if __name__ == "__main__":
