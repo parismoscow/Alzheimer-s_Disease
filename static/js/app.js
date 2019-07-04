@@ -1,6 +1,7 @@
 function displayReport(modelStats) {
   data = modelStats['data']
   layout = modelStats['layout']
+  d3.select("#status").text("")
   Plotly.newPlot("roc_curve", data, layout)
   d3.select("#class_report").html(modelStats['class_report'])
   console.log(modelStats['class_report']);
@@ -10,7 +11,7 @@ async function selectionChanged () {
   // Fetch new data each time a new selection is made
   const dict  = {}
   // clear LogisticRegression
-  d3.select('#status').text("")
+  d3.select('#status').text("Collecting data...")
   d3.select('#roc_curve').text("")
   d3.select('#class_report').text("")
 
@@ -48,7 +49,7 @@ async function selectionChanged () {
 
   else {
     // train a new model
-    d3.select('#status').text("training the model....")
+    d3.select('#status').text("Training the model....")
     const modelStats = await d3.json(`/newmodel/${temp}`)
     d3.select('#status').text("")
     if (modelStats['success'] == -1) {

@@ -26,16 +26,11 @@ from collections import Counter
 import pickle
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
+from os import path
 
 
-def cleanup_data(df, drop):
+def cleanup_data(dataset_name, df, drop, prediction):
     df = df.replace(r'^\s*$', np.nan, regex=True)
-#   df.fillna(value=0, inplace=True)
-    if drop:
-        df.dropna(inplace=True)
-    else:
-        df.fillna(value=0, inplace=True)
-
     if 'ABETA_UPENNBIOMK9_04_19_17' in df:
         df.loc[df['ABETA_UPENNBIOMK9_04_19_17']
                == '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
@@ -55,14 +50,39 @@ def cleanup_data(df, drop):
                == '<8', 'PTAU_UPENNBIOMK9_04_19_17'] = 7
         df['PTAU_UPENNBIOMK9_04_19_17'] = df['PTAU_UPENNBIOMK9_04_19_17'].astype(
             float)
+    # create feature selection
+    columns = ['PTID']
+    columns.append(prediction)
+    dataset_lower = dataset_name.lower()
+    if 'demographic' in dataset_lower:
+        columns = columns + ['AGE', 'PTRACCAT',
+                             'PTETHCAT', 'PTGENDER', 'PTEDUCAT']
+    if 'apoe4' in dataset_lower:
+        columns.append('APOE4')
+    if 'cogtest' in dataset_lower:
+        columns = columns + ['CDRSB', 'ADAS11',
+                             'MMSE', 'ADAS13', 'RAVLT_immediate']
+    if 'mri' in dataset_lower:
+        columns = columns + ['Ventricles', 'Hippocampus',
+                             'WholeBrain', 'Entorhinal', 'MidTemp']
+    if 'pet' in dataset_lower:
+        columns = columns + ['FDG', 'AV45']
+    if 'csv' in dataset_lower:
+        columns = columns + ['ABETA_UPENNBIOMK9_04_19_17',
+                             'TAU_UPENNBIOMK9_04_19_17', 'PTAU_UPENNBIOMK9_04_19_17']
 
-    # Remove diagnosis changes that are unlikely
-#   df = df.loc[(df['final_DX'] == 'MCI') | (df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
-    df = df.loc[(df['DX'] == 'MCI') | (
-        df['DX'] == 'Dementia') | (df['DX'] == 'NL')]
-
-#   df = df.loc[(df['DXCHANGE'] == 1) | (df['DXCHANGE'] == 2) | (df['DXCHANGE'] == 3) | (df['DXCHANGE'] == 4) | (df['DXCHANGE'] == 5)]
-
+    df = df.loc[:, columns]
+    if drop:
+        df.dropna(inplace=True)
+    else:
+        df.fillna(value=0, inplace=True)
+    # Remove diagnosis that are very infrequent
+    if prediction == 'DX':
+        df = df.loc[(df['DX'] == 'MCI') | (
+            df['DX'] == 'Dementia') | (df['DX'] == 'NL')]
+    elif prediction == 'final_DX':
+        df = df.loc[(df['final_DX'] == 'MCI') | (
+            df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
     return df
 
 
@@ -84,12 +104,33 @@ def get_dataset_name(dict):
 
 
 def get_data(dataset_name, oversampling, scaling, prediction):
+    if prediction == 'DX':
+        raw_data = 'Data/TADPOLE_D1_D2.csv'
+    elif prediction == 'final_DX':
+        raw_data = 'Data/TADPOLE_D1_D2_finalDX.csv'
+
     filename = 'Data/' + dataset_name + '.csv'
-    df = pd.read_csv(filename)
+    if path.isfile(filename):
+        df = pd.read_csv(filename)
+    else:
+        # read original raw file, cleanup data
+        try:
+            df = pd.read_csv(raw_data)
+            drop = True
+            df = cleanup_data(dataset_name, df, drop, prediction)
+            # print('in get_data, columns are', df.columns)
+        except Exception as e:
+            print("error: ", e)
+
+    print("before populate_X_y, preview", df.head(2))
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
+    print("after populate_X_y", len(X))
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+    print("after train_test_split", len(X_train))
     X_train, X_test = scale_features(scaling, X_train, X_test)
+    print("after scale features", len(X_train))
     X_train, y_train = oversample(oversampling, X_train, y_train)
+    print("after oversample", len(X_train))
     return X_train, X_test, y_train, y_test
 
 
@@ -194,10 +235,13 @@ def add_sum_column(df):
 
 
 def add_final_dx_column(df):
+    print("add_final_dx_column getting df columns:", df.columns)
     for dx in ['Dementia', 'MCI', "NL"]:
         if dx in df['DX'].values:
             df['final_DX'] = dx
+            print("add_final_dx_column returning df columns:", df.columns)
             return df
+    return df
 
 
 def show_data(df, category):
@@ -206,17 +250,21 @@ def show_data(df, category):
 
 
 def populate_X_y(df, y_cat, encode_list):
+    print("entering populatexy, size", len(df[y_cat]))
     y = df[y_cat]
     X = df.drop(columns=[y_cat, 'PTID'])
 #   X = df.drop(columns=[y_cat, 'PTID'])
 # todo replace following line with one above
 #   X = df.drop(columns=[y_cat])
+    print("in populatexy, before encoding,  size", len(X))
     label_encoder = LabelEncoder()
     for label in encode_list:
         if label in X:
             encode = X[label]
             label_encoder.fit(encode)
             X[label] = label_encoder.transform(encode)
+    print("in populatexy, after encoding,  size", len(X))
+
     return X, y
 
 
