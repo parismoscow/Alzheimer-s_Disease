@@ -62,10 +62,7 @@ def newmodel(dict):
 @app.route("/getdata/<dict>")
 def getdata(dict):
     success = 0
-    # print("in getdata, received dict ", dict)
-    # result = request.form
     result = json.loads(dict)
-    # print(result)
     oversampling = result['oversampling']
     scaling = result['scaling']
     prediction = result['prediction']

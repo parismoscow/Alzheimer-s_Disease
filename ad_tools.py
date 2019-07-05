@@ -28,26 +28,28 @@ from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
 from os import path
 
+debug = 1
+
 
 def cleanup_data(dataset_name, df, drop, prediction):
     df = df.replace(r'^\s*$', np.nan, regex=True)
     if 'ABETA_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['ABETA_UPENNBIOMK9_04_19_17']
-               == '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
+        df.loc[df['ABETA_UPENNBIOMK9_04_19_17'] ==
+               '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
         df['ABETA_UPENNBIOMK9_04_19_17'] = df['ABETA_UPENNBIOMK9_04_19_17'].astype(
             float)
     if 'TAU_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['TAU_UPENNBIOMK9_04_19_17']
-               == '>1300', 'TAU_UPENNBIOMK9_04_19_17'] = 1301
-        df.loc[df['TAU_UPENNBIOMK9_04_19_17']
-               == '<80', 'TAU_UPENNBIOMK9_04_19_17'] = 79
+        df.loc[df['TAU_UPENNBIOMK9_04_19_17'] ==
+               '>1300', 'TAU_UPENNBIOMK9_04_19_17'] = 1301
+        df.loc[df['TAU_UPENNBIOMK9_04_19_17'] ==
+               '<80', 'TAU_UPENNBIOMK9_04_19_17'] = 79
         df['TAU_UPENNBIOMK9_04_19_17'] = df['TAU_UPENNBIOMK9_04_19_17'].astype(
             float)
     if 'PTAU_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['PTAU_UPENNBIOMK9_04_19_17']
-               == '>120', 'PTAU_UPENNBIOMK9_04_19_17'] = 121
-        df.loc[df['PTAU_UPENNBIOMK9_04_19_17']
-               == '<8', 'PTAU_UPENNBIOMK9_04_19_17'] = 7
+        df.loc[df['PTAU_UPENNBIOMK9_04_19_17'] ==
+               '>120', 'PTAU_UPENNBIOMK9_04_19_17'] = 121
+        df.loc[df['PTAU_UPENNBIOMK9_04_19_17'] ==
+               '<8', 'PTAU_UPENNBIOMK9_04_19_17'] = 7
         df['PTAU_UPENNBIOMK9_04_19_17'] = df['PTAU_UPENNBIOMK9_04_19_17'].astype(
             float)
     # create feature selection
@@ -77,19 +79,28 @@ def cleanup_data(dataset_name, df, drop, prediction):
     if 'csv' in dataset_lower:
         columns = columns + ['ABETA_UPENNBIOMK9_04_19_17',
                              'TAU_UPENNBIOMK9_04_19_17', 'PTAU_UPENNBIOMK9_04_19_17']
-
+    if debug:
+        print("grabbing columns: ", columns)
     df = df.loc[:, columns]
-    if drop:
-        df.dropna(inplace=True)
-    else:
-        df.fillna(value=0, inplace=True)
-    # Remove diagnosis that are very infrequent
+    if debug:
+        print("df preview1: ", df.head(2), " length: ", df.shape[0])
     if prediction == 'DX':
         df = df.loc[(df['DX'] == 'MCI') | (
             df['DX'] == 'Dementia') | (df['DX'] == 'NL')]
     elif prediction == 'final_DX':
         df = df.loc[(df['final_DX'] == 'MCI') | (
             df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
+    if debug:
+        print("df preview2: ", df.head(2))
+    if drop:
+        df.dropna(inplace=True)
+    else:
+        df.fillna(value=0, inplace=True)
+
+    # Remove diagnosis that are very infrequent
+
+    if debug:
+        print("in cleanup_data returning df: ", df.head(2))
     return df
 
 
@@ -111,32 +122,50 @@ def get_dataset_name(dict):
 
 
 def get_data(dataset_name, oversampling, scaling, prediction):
-    print("Using dataset:", dataset_name)
-    if prediction == 'DX':
-        raw_data = 'Data/TADPOLE_D1_D2.csv'
-    elif prediction == 'final_DX':
-        raw_data = 'Data/TADPOLE_D1_D2_finalDX.csv'
+    if debug:
+        print("in get_data using dataset:", dataset_name)
+    # if prediction == 'DX':
+    raw_data = 'Data/TADPOLE_subset_raw.csv'
+    # elif prediction == 'final_DX':
+    #     raw_data = 'Data/TADPOLE_D1_D2_finalDX.csv'
 
     filename = 'Data/' + dataset_name + '.csv'
     if path.isfile(filename):
+        if debug:
+            print("dataset already exists")
         df = pd.read_csv(filename)
     else:
         # read original raw file, cleanup data
+        if debug:
+            print("dataset does not exist, creating from ", raw_data)
         try:
             df = pd.read_csv(raw_data)
             drop = True
+            if debug:
+                print("before cleanup_data")
             df = cleanup_data(dataset_name, df, drop, prediction)
         except Exception as e:
-            print("error: ", e)
-
+            if debug:
+                print("in get_data, error: ", e)
+    if debug:
+        print("in get_data before populate_X_y")
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
+    if debug:
+        print("in get_data after populate_X_y, X length: ", len(X))
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+    if debug:
+        print("in get_data after train test split")
     X_train, X_test = scale_features(scaling, X_train, X_test)
+    if debug:
+        print("in get_data after scale fealtures")
     X_train, y_train = oversample(oversampling, X_train, y_train)
+    if debug:
+        print("in get_data after oversample")
     return X_train, X_test, y_train, y_test
 
 
 def load_model(model_name):
+    print("Looking for model: ", model_name)
     model = pickle.load(open('Models/' + model_name + ".sav", 'rb'))
     return model
 
@@ -300,7 +329,8 @@ def oversample(alg, X_train, y_train):
 
 
 def train_model(model_name, X_train, y_train):
-    # print("in run_model received model_name: ", model_name)
+
+    print("Training new model: ", model_name)
     if 'svc' in model_name.lower():
         model = SVC(kernel='linear', probability=True)
 
