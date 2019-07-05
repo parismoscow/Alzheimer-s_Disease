@@ -131,6 +131,11 @@ def resources():
     return render_template("resources.html")
 
 
+@app.route("/demographics")
+def demograhpics():
+    return render_template("demograhpics.html")
+
+
 @app.route("/treatment")
 def treatment():
     return render_template("treatment.html")
