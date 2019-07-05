@@ -12,3 +12,4 @@ pickleshare==0.7.5
 pandas==0.23.4
 numpy==1.15.4
 numpydoc==0.8.0
+gunicorn==19.7.1
