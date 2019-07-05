@@ -133,7 +133,7 @@ def resources():
 
 @app.route("/demographics")
 def demograhpics():
-    return render_template("demograhpics.html")
+    return render_template("demographics.html")
 
 
 @app.route("/treatment")
