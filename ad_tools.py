@@ -164,31 +164,31 @@ def load_model(model_name):
     return model
 
 
-# def build_NN_builder(dim):
-#     from keras.models import Sequential
-#     from keras.wrappers.scikit_learn import KerasClassifier
-#     from keras.callbacks import EarlyStopping
-#     from keras.layers import Dense
-#
-#     def model_no_args():
-#         classifier = Sequential()
-#         classifier.add(Dense(units=6, activation='relu', input_dim=dim))
-#         classifier.add(Dense(units=6, activation='relu'))
-#         classifier.add(Dense(units=6, activation='relu'))
-#         classifier.add(Dense(units=6, activation='relu'))
-#         classifier.add(Dense(units=4, activation='relu'))
-#         classifier.add(Dense(units=4, activation='relu'))
-#         classifier.add(Dense(units=4, activation='relu'))
-#         classifier.add(Dense(units=4, activation='relu'))
-#
-#         classifier.add(Dense(units=3, activation='softmax'))
-#
-#         classifier.compile(
-#             optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-#         return classifier
-#
-#     return model_no_args
-#
+def build_NN_builder(dim):
+    from keras.models import Sequential
+    from keras.wrappers.scikit_learn import KerasClassifier
+    from keras.callbacks import EarlyStopping
+    from keras.layers import Dense
+
+    def model_no_args():
+        classifier = Sequential()
+        classifier.add(Dense(units=6, activation='relu', input_dim=dim))
+        classifier.add(Dense(units=6, activation='relu'))
+        classifier.add(Dense(units=6, activation='relu'))
+        classifier.add(Dense(units=6, activation='relu'))
+        classifier.add(Dense(units=4, activation='relu'))
+        classifier.add(Dense(units=4, activation='relu'))
+        classifier.add(Dense(units=4, activation='relu'))
+        classifier.add(Dense(units=4, activation='relu'))
+
+        classifier.add(Dense(units=3, activation='softmax'))
+
+        classifier.compile(
+            optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        return classifier
+
+    return model_no_args
+
 
 def build_nn_for_skl(dim):
 
