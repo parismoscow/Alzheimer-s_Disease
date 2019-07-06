@@ -191,6 +191,10 @@ def build_NN_builder(dim):
 
 
 def build_nn_for_skl(dim):
+    from keras.models import Sequential
+    from keras.wrappers.scikit_learn import KerasClassifier
+    from keras.callbacks import EarlyStopping
+    from keras.layers import Dense
 
     return KerasClassifier(
         build_NN_builder(dim),
