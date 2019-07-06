@@ -225,7 +225,7 @@ def train_model(model_name, X_train, y_train):
 
     if debug:
         print("saving model to ", model_file)
-    pickle.dump(model, open(model_file, 'wb'))
+    # pickle.dump(model, open(model_file, 'wb'))
 
     return model
 

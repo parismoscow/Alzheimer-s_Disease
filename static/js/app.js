@@ -61,13 +61,15 @@ function displayReport(modelStats) {
 
 function clear_screen(){
   d3.select('#features').exit().remove()
-  d3.select('#class').exit().remove()
+  d3.select('#class_report').exit().remove()
 }
 
 async function selectionChanged () {
-  clear_screen()
-  d3.select('#features').remove()
-  d3.select('#class').remove()
+  // clear_screen()
+  d3.select('#features-table').exit().remove()
+  d3.select('#class_report-table').exit().remove()
+  d3.select('#fitext').exit().remove()
+  d3.select("#classtext").exit().remove()
   // Fetch new data each time a new selection is made
   const dict  = {}
   // clear LogisticRegression
