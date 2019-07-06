@@ -4,11 +4,54 @@ function displayReport(modelStats) {
   d3.select("#status").text("")
   Plotly.newPlot("roc_curve", data, layout)
 
+  const classReport = modelStats['class_report']
 
-  d3.select("#class_report")
-  .append('textarea').attr('cols', 60).attr('rows', 10)
-  .text(modelStats['class_report'])
-  console.log(modelStats['class_report']);
+  console.log(classReport);
+
+  let classHeader = d3.select('#class_report')
+  .append('table').property('border', 1).property('id', 'class-table').append('thead')
+
+  classHeader.append('td').text('')
+  classHeader.append('td').text('Precision')
+  classHeader.append('td').text('Recall')
+  classHeader.append('td').text('F1')
+  classHeader.append('td').text('Support')
+
+  for (const [key, value] of Object.entries(classReport)){
+    console.log(`${key}: ${value}`);
+    let row = d3.select('#class-table').append('tr')
+
+    if (key !== 'accuracy'){
+      row.append('td').text(key)
+      row.append('td').text(value)
+    }
+    else{
+      row.append('td').text(key)
+      row.append('td').text(value.precision)
+      row.append('td').text(value.recall)
+      row.append('td').text(value["f1-score"])
+      row.append('td').text(value.support)
+    }
+  }
+
+
+  let header = d3.select('#features')
+  .append('table').property('border', 1).property('id', 'features-table').append('thead')
+
+  header.append('td').text('Feature')
+  header.append('td').text('Importance')
+
+  features = modelStats['features']
+  console.log(`features are: ${features}`)
+
+
+  for (const [key, value] of Object.entries(features)){
+    console.log(`${key}: ${value}`);
+    let row = d3.select('#features-table').append('tr')
+    row.append('td').text(value)
+    row.append('td').text(key)
+  }
+
 }
 
 async function selectionChanged () {

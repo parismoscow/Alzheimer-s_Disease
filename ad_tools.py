@@ -125,7 +125,7 @@ def create_new_dataset(dataset_name, prediction):
             return 0
     except Exception as e:
         if debug:
-            print("in get_data, error: ", e)
+            print("in create_new_dataset, error: ", e)
         return 0
 
 
@@ -142,7 +142,7 @@ def get_data(dataset_name, oversampling, scaling, prediction):
     X_train, X_test = scale_features(scaling, X_train, X_test)
     X_train, y_train = oversample(oversampling, X_train, y_train)
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test, X.columns
 
 
 def dataset_exists(dataset_name):
@@ -186,11 +186,12 @@ def train_model(model_name, X_train, y_train):
     return model
 
 
-def eval_and_report(model, X_test, y_test, size):
+def eval_and_report(model, X_test, y_test, size, X_features):
     try:
-        metrics = evaluate_model(model, X_test, y_test)
+        metrics = evaluate_model(model, X_test, y_test, X_features)
         class_report = metrics['class_report']
         score = metrics['score']
+        features = metrics['features']
         # size = len(X_train)
         data = [
             {"x": metrics['fpr'][0], "y": metrics['tpr']
@@ -219,6 +220,7 @@ def eval_and_report(model, X_test, y_test, size):
             'data': data,
             'score': score,
             'class_report': class_report,
+            'features': features,
             'size': size,
             'layout': layout,
             'success': 1
@@ -232,18 +234,28 @@ def eval_and_report(model, X_test, y_test, size):
     return (response)
 
 
-def evaluate_model(model, X_test, y_test):
+def evaluate_model(model, X_test, y_test, X_features):
     # print("in evaluate model, received ", X_test, y_test)
+    features = ""
     score = round(model.score(X_test, y_test), 4)
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
-    class_report = classification_report(y_test, predictions)
+    class_report = classification_report(y_test, predictions, output_dict=True)
     roc_auc, fpr, tpr = return_roc(y_test, model.predict_proba(X_test))
+    try:
+        feature_importances = model.feature_importances_
+        features = sorted(
+            zip(feature_importances, X_features), reverse=True)
+        print("got features: ", features)
+    except:
+        print("could not find feature_importances_ in model ", model)
+        features = ""
 
     metrics = {
         'score': score,
         'class_report': class_report,
         'roc_auc': roc_auc,
+        'features': dict(features),
         'fpr': fpr,
         'tpr': tpr
     }
