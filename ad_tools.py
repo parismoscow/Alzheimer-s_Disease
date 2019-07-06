@@ -27,6 +27,7 @@ import pickle
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
 from os import path
+import os
 
 debug = 1
 
@@ -50,15 +51,16 @@ def cleanup_data(dataset_name, df, drop, prediction):
         columns = columns + ['CDRSB', 'ADAS11',
                              'MMSE', 'ADAS13', 'RAVLT_immediate']
 
-    # if 'mripct' in dataset_lower:
-    #     columns = columns + ['Ventricles', 'Hippocampus',
-    #                          'WholeBrain', 'Entorhinal', 'MidTemp',
-    #
     if 'mripct' in dataset_lower:
         columns = columns + ['Ventricles', 'Hippocampus',
                              'WholeBrain', 'Entorhinal', 'MidTemp',
                              'pct_Ventricles', 'pct_Hippocampus',
                              'pct_WholeBrain', 'pct_Entorhinal', 'pct_MidTemp']
+
+    elif 'mri' in dataset_lower:
+        columns = columns + ['Ventricles', 'Hippocampus',
+                             'WholeBrain', 'Entorhinal', 'MidTemp']
+
     if 'pet' in dataset_lower:
         columns = columns + ['FDG', 'AV45']
     if 'csf' in dataset_lower:
@@ -71,11 +73,17 @@ def cleanup_data(dataset_name, df, drop, prediction):
     if prediction == 'DX':
         df = df.loc[(df['DX'] == 'MCI') | (
             df['DX'] == 'Dementia') | (df['DX'] == 'NL')]
-    # elif prediction == 'final_DX':
-    #     df = df.loc[(df['final_DX'] == 'MCI') | (
-    #         df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
+    if debug:
+        print("in get_data 1")
+    elif prediction == 'final_DX':
+        df = df.loc[(df['final_DX'] == 'MCI') | (
+            df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
 
     df = df.loc[:, columns]
+    if debug:
+        print("in cleanup_data 2, df prevew ", df.head())
+    if debug:
+        print("df size ", df.shape)
 
     if drop:
         df.dropna(inplace=True)
@@ -88,43 +96,48 @@ def cleanup_data(dataset_name, df, drop, prediction):
         print("df preview2: ", df.head(2))
 
     if debug:
-        print(df['DX'].value_counts())
+        print(df[prediction].value_counts())
     return df
 
 
-def get_data(dataset_name, oversampling, scaling, prediction):
-    save = 0
-    if debug:
-        print("dataset_name, oversampling, scaling, prediciton: ",
-              dataset_name, oversampling, scaling, prediction)
-    if debug:
-        print("in get_data using dataset:", dataset_name)
-    raw_data = 'Data/raw_data_subset.csv'
-    # elif prediction == 'final_DX':
-    #     raw_data = 'Data/TADPOLE_D1_D2_finalDX.csv'
-
-    filename = 'Data/' + dataset_name + '.csv'
-    if path.isfile(filename):
-        if debug:
-            print("dataset already exists")
-        df = pd.read_csv(filename)
+def create_new_dataset(dataset_name, prediction):
+    if prediction == 'DX':
+        raw_data = os.path.join('Data', 'raw_data_subset' + '.csv')
+    elif prediction == 'final_DX':
+        raw_data = os.path.join('Data', 'raw_data_subset_finalDX' + '.csv')
     else:
-        # read original raw file, cleanup data
-        if debug:
-            print("dataset does not exist, creating from ", raw_data)
-        try:
-            df = pd.read_csv(raw_data)
-            drop = True
-            df = cleanup_data(dataset_name, df, drop, prediction)
-            df.sort_values(by='PTID', inplace=True)
-            df.to_csv('testcsv.csv', index=False)
-            # df.to_csv("TADPOLE_subset_raw.csv", index=False)
-        except Exception as e:
-            if debug:
-                print("in get_data, error: ", e)
-    X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
+        print("This diagnosis is not yet supported")
+
     if debug:
-        print("in get_data after populate_X_y, X length: ", len(X))
+        print("in create_new_dataset: dataset_name, prediciton: ",
+              dataset_name, prediction)
+    filename = os.path.join('Data', dataset_name + '.csv')
+    try:
+        df = pd.read_csv(raw_data)
+        drop = True
+        df = cleanup_data(dataset_name, df, drop, prediction)
+        # df.sort_values(by='PTID', inplace=True)
+        # df.to_csv('testcsv.csv', index=False)
+        if df.shape[0]:
+            df.to_csv(filename, index=False)
+            return 1
+        else:
+            return 0
+    except Exception as e:
+        if debug:
+            print("in get_data, error: ", e)
+        return 0
+
+
+def get_data(dataset_name, oversampling, scaling, prediction):
+    filename = os.path.join('Data', dataset_name + '.csv')
+
+    if debug:
+        print("dataset", dataset_name, " exists")
+
+    df = pd.read_csv(filename)
+
+    X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
     X_train, X_test = scale_features(scaling, X_train, X_test)
     X_train, y_train = oversample(oversampling, X_train, y_train)
@@ -132,9 +145,44 @@ def get_data(dataset_name, oversampling, scaling, prediction):
     return X_train, X_test, y_train, y_test
 
 
+def dataset_exists(dataset_name):
+    if path.isfile(os.path.join('Data', dataset_name + '.csv')):
+        return 1
+    return 0
+
+
+def model_exists(model_name):
+    if path.isfile(os.path.join('Models', model_name + '.sav')):
+        return 1
+    return 0
+
+
 def load_model(model_name):
-    print("Looking for model: ", model_name)
-    model = pickle.load(open('Models/' + model_name + ".sav", 'rb'))
+    model_file = os.path.join('Models', model_name + '.sav')
+    print("Looking for file: ", model_file)
+    model = pickle.load(open(model_file, 'rb'))
+    return model
+
+
+def train_model(model_name, X_train, y_train):
+    model_file = os.path.join('Models', model_name + '.sav')
+    if debug:
+        print("Training new model: ", model_name)
+    if 'svc' in model_name.lower():
+        model = SVC(kernel='linear', probability=True)
+
+    elif 'random forest' in model_name.lower() or 'rf' in model_name.lower():
+        model = RandomForestClassifier(n_estimators=200)
+
+    elif 'logistic regression' in model_name.lower() or 'lr' in model_name.lower():
+        model = LogisticRegression()
+
+    model.fit(X_train, y_train)
+
+    if debug:
+        print("saving model to ", model_file)
+    pickle.dump(model, open(model_file, 'wb'))
+
     return model
 
 
@@ -176,7 +224,7 @@ def eval_and_report(model, X_test, y_test, size):
             'success': 1
         }
     except Exception as e:
-        print("inside eval_and_report, issue with model", e)
+        print("inside eval_and_report, issue with evaluating model", e)
         response = {
             'success': 0
         }
@@ -308,28 +356,3 @@ def oversample(alg, X_train, y_train):
         return X_train, y_train
 
 # def save_model()
-
-
-def train_model(model_name, X_train, y_train):
-
-    print("Training new model: ", model_name)
-    if 'svc' in model_name.lower():
-        model = SVC(kernel='linear', probability=True)
-
-    elif 'random forest' in model_name.lower() or 'rf' in model_name.lower():
-        model = RandomForestClassifier(n_estimators=200)
-
-    elif 'logistic regression' in model_name.lower() or 'lr' in model_name.lower():
-        model = LogisticRegression()
-
-    # print("start training model...")
-    model.fit(X_train, y_train)
-#     print("*************", model_name, "*************\n",
-#           "\nScore is: ", model.score(X_test, y_test), "\n")
-#     predictions = model.predict(X_test)
-#     print("\nConfusion matrix\n", confusion_matrix(y_test, predictions))
-#     print("\n", classification_report(y_test, predictions))
-# #   print("\n", classification_report(y_test, predictions, target_names=["NL to NL", "MCI to MCI", "AD to AD", "NL to MCI", "MCI to AD" ]))
-    # print("finished training model...")
-
-    return model

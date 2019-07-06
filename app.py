@@ -6,6 +6,8 @@ import json
 
 app = Flask(__name__)
 
+debug = 1
+
 
 @app.route("/")
 def diseases():
@@ -61,61 +63,45 @@ def newmodel(dict):
 
 @app.route("/getdata/<dict>")
 def getdata(dict):
-    success = 0
+
     result = json.loads(dict)
     oversampling = result['oversampling']
     scaling = result['scaling']
     prediction = result['prediction']
+    response = {}
     model_name = adt.return_model_name(result)
     dataset_name = adt.get_dataset_name(result)
 
     try:
-        X_train, X_test, y_train, y_test = adt.get_data(
-            dataset_name, oversampling, scaling, prediction)
-        model = adt.load_model(model_name)
-        metrics = adt.evaluate_model(model, X_test, y_test)
+        # if data does not exist create a new dataset
+        if not adt.dataset_exists(dataset_name):
+            adt.create_new_dataset(dataset_name, prediction)
+    except Exception as e:
+        if debug:
+            print("in getdata, could not generate new data: ", e)
+        response['success'] = -1
+        response['error'] = str(e)
+        return jsonify(response)
 
-        response = adt.eval_and_report(model, X_test, y_test, len(X_train))
-    #
-    #     class_report = metrics['class_report']
-    #     score = metrics['score']
-    #     size = len(X_train)
-    #     data = [
-    #         {"x": metrics['fpr'][0], "y": metrics['tpr']
-    #          [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
-    #         {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
-    #          "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
-    #         {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
-    #          "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
-    #     ]
-    #     layout = {
-    #         'title': {
-    #             'text': 'Score: ' + str(score) + '<br>Training set size: ' + str(size)
-    #         },
-    #         'xaxis': {
-    #             'title': {
-    #                 'text': 'False Positive Rate'
-    #             }
-    #         },
-    #         'yaxis': {
-    #             'title': {
-    #                 'text': 'True Positive Rate'
-    #             }
-    #         }
-    #     }
-    #     response = {
-    #         'data': data,
-    #         'score': score,
-    #         'class_report': class_report,
-    #         'size': size,
-    #         'layout': layout,
-    #         'success': 1
-    #     }
-    # except:
-    #     response = {
-    #         'success': 0
-    #     }
-    #
+    # populate X and y, split, oversample, scale data
+    X_train, X_test, y_train, y_test = adt.get_data(
+        dataset_name, oversampling, scaling, prediction)
+
+    try:
+        # if model doesn't exist, train new model
+        if not adt.model_exists(model_name):
+            adt.train_model(model_name, X_train, y_train)
+    except Exception as e:
+        if debug:
+            print("in getdata, could not train new model: ", e)
+        response['success'] = -2
+        response['error'] = str(e)
+        return jsonify(response)
+
+    model = adt.load_model(model_name)
+    metrics = adt.evaluate_model(model, X_test, y_test)
+    response = adt.eval_and_report(model, X_test, y_test, len(X_train))
+
     return jsonify(response)
 
 

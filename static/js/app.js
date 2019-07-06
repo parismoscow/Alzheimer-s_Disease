@@ -42,30 +42,34 @@ async function selectionChanged () {
     dict['csf'] = d3.select('#csf').property('value')
   }
 
-  // try to obtain data from an existing model
   temp = JSON.stringify(dict);
   const modelStats = await d3.json(`/getdata/${temp}`)
   // if successful display model stats
-  if (modelStats['success']) {
+  if (modelStats['success'] == 1) {
     displayReport(modelStats)
   }
+  else if (modelStats['success'] == -1)
+    d3.select('#status').text("The data set could not be generated")
+  else if (modelStats['success'] == -2)
+    d3.select('#status').text("Model could not be trained")
+  else if (modelStats['success'] == 0)
+    d3.select('#status').text("Model could not be evaluated")
 
-  else {
-    // train a new model
-    d3.select('#status').text("Training the model....")
-    const modelStats = await d3.json(`/newmodel/${temp}`)
-    d3.select('#status').text("")
-    if (modelStats['success'] == -1) {
-        d3.select('#status').text("The data set is not available")
-      console.log("this dataset is not available")
-    }
-    else if (modelStats['success'] == 0) {
-      d3.select('#status').text("There was an issue with obtaining the model ("+modelStats['error'] +")")
-      console.log("There was an issue with obtaining a model");
-    }
-    else {
-      // if successful display model stats
-      displayReport(modelStats)
-    }
-  }
+  // else {
+  //   // d3.select('#status').text("This should not happen...")
+  //   // const modelStats = await d3.json(`/newmodel/${temp}`)
+  //   // d3.select('#status').text("")
+  //   // if (modelStats['success'] == -1) {
+  //   //     d3.select('#status').text("The data set is not available")
+  //   //   console.log("this dataset is not available")
+  //   // }
+  //   // else if (modelStats['success'] == 0) {
+  //   //   d3.select('#status').text("There was an issue with obtaining the model ("+modelStats['error'] +")")
+  //   //   console.log("There was an issue with obtaining a model");
+  //   // }
+  //   // else {
+  //   //   // if successful display model stats
+  //   //   displayReport(modelStats)
+  //   // }
+  // }
 }
