@@ -11,7 +11,7 @@ function displayReport(modelStats) {
   var f = d3.format(".3f");
 
   let classHeader = d3.select('#class_report')
-  .text('Classification Report')
+  .text('Classification Report').attr('id', 'classtext')
   .append('table').property('id', 'class-table').append('thead')
 
   classHeader.append('td').text('')
@@ -38,8 +38,7 @@ function displayReport(modelStats) {
   }
 
   let header = d3.select('#features')
-  .text('Feature Importance')
-
+  .text('Feature Importance').property('id', 'fitext')
   .append('table').property('id', 'features-table')
 
   // .append('thead')

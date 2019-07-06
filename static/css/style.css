@@ -16,9 +16,9 @@
 
 table {
   border-collapse: collapse;
-  width: 100%;
-
-}
+  width: 80%;
+  font-weight: normal;
+  }
 
 th, td {
   padding: 8px;
@@ -28,13 +28,16 @@ th, td {
 }
 
 #class-table {
-  width: 80%;
+  width: 60%;
 }
 
 #features-table{
   width: 50%
 }
 
+#fitext, #classtext{
+  font-weight: bold;
+}
 
 
 tr:nth-child(even) {background-color: #f2f2f2;}
