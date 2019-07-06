@@ -64,8 +64,8 @@ function displayReport(modelStats) {
 }
 
 function clear_screen(){
-  d3.select('#features-table').exit()
-  d3.select('#class-table')
+  d3.select('#features-table').exit().remove()
+  d3.select('#class-table').exit().remove()
 }
 
 async function selectionChanged () {
