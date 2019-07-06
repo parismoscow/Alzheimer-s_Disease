@@ -8,8 +8,11 @@ function displayReport(modelStats) {
 
   console.log(classReport);
 
+  var f = d3.format(".3f");
+
   let classHeader = d3.select('#class_report')
-  .append('table').property('border', 1).property('id', 'class-table').append('thead')
+  .text('Classification Report')
+  .append('table').property('id', 'class-table').append('thead')
 
   classHeader.append('td').text('')
   classHeader.append('td').text('Precision')
@@ -21,34 +24,28 @@ function displayReport(modelStats) {
     console.log(`${key}: ${value}`);
     let row = d3.select('#class-table').append('tr')
 
-    if (key === 'accuracy'){
+    if (key == 'accuracy'){
       row.append('td').text(key)
-      row.append('td').text(value)
+      row.append('td').text(f(value))
     }
-    else{
+    else {
       row.append('td').text(key)
-      row.append('td').text(value.precision)
-      row.append('td').text(value.recall)
-      row.append('td').text(value["f1-score"])
-      row.append('td').text(value.support)
+      row.append('td').text(f(value.precision))
+      row.append('td').text(f(value.recall))
+      row.append('td').text(f(value["f1-score"]))
+      row.append('td').text(f(value.support))
     }
-
-
-
   }
 
-
-
-
-  // d3.select("#class_report")
-  // .html(modelStats['class_report'])
-  // console.log(modelStats['class_report']);
-
   let header = d3.select('#features')
-  .append('table').property('border', 1).property('id', 'features-table').append('thead')
+  .text('Feature Importance')
 
-  header.append('td').text('Feature')
-  header.append('td').text('Importance')
+  .append('table').property('id', 'features-table')
+
+  // .append('thead')
+  //
+  // header.append('td').text('Feature')
+  // header.append('td').text('Importance')
 
   features = modelStats['features']
   console.log(`features are: ${features}`)
@@ -58,7 +55,7 @@ function displayReport(modelStats) {
     console.log(`${key}: ${value}`);
     let row = d3.select('#features-table').append('tr')
     row.append('td').text(value)
-    row.append('td').text(key)
+    row.append('td').text(f(key))
   }
 
 }
@@ -70,6 +67,8 @@ function clear_screen(){
 
 async function selectionChanged () {
   clear_screen()
+  d3.select('#features-table').remove()
+  d3.select('#class-table').remove()
   // Fetch new data each time a new selection is made
   const dict  = {}
   // clear LogisticRegression

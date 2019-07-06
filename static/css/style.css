@@ -13,3 +13,28 @@
 .centered {
   text-align: center;
 }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+}
+
+#class-table {
+  width: 80%;
+}
+
+#features-table{
+  width: 50%
+}
+
+
+
+tr:nth-child(even) {background-color: #f2f2f2;}
