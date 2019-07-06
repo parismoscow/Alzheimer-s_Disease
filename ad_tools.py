@@ -32,122 +32,73 @@ debug = 1
 
 
 def cleanup_data(dataset_name, df, drop, prediction):
-    if debug:
-        print("in clean_data 1")
     df = df.replace(r'^\s*$', np.nan, regex=True)
-    print("in clean_data 2")
 
-    if drop:
-        df.dropna(inplace=True)
-    else:
-        df.fillna(value=0, inplace=True)
-    print("in clean_data 3")
+    if debug:
+        print("in cleanup_data, was passed df with ", df.shape[0], " rows")
 
-    if 'ABETA_UPENNBIOMK9_04_19_17' in df:
-        if debug:
-            print("in clean_data 4")
-        df.loc[df['ABETA_UPENNBIOMK9_04_19_17']
-               == '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
-        if debug:
-            print("in clean_data 5")
+    # create feature selection
+    columns = ['PTID']
+    columns.append(prediction)
+    dataset_lower = dataset_name.lower()
+    if 'demographic' in dataset_lower:
+        columns = columns + ['AGE', 'PTRACCAT',
+                             'PTETHCAT', 'PTGENDER', 'PTEDUCAT']
+    if 'apoe4' in dataset_lower:
+        columns.append('APOE4')
+    if 'cogtest' in dataset_lower:
+        columns = columns + ['CDRSB', 'ADAS11',
+                             'MMSE', 'ADAS13', 'RAVLT_immediate']
 
-        df['ABETA_UPENNBIOMK9_04_19_17'] = df['ABETA_UPENNBIOMK9_04_19_17'].astype(
-            float)
-
-    # if 'ABETA_UPENNBIOMK9_04_19_17' in df:
-    #     if debug:
-    #         print("in clean_data 4")
-    #     df.loc[df['ABETA_UPENNBIOMK9_04_19_17']
-    #            == '<200', 'ABETA_UPENNBIOMK9_04_19_17'] = 199
-        # df['ABETA_UPENNBIOMK9_04_19_17'] = df['ABETA_UPENNBIOMK9_04_19_17'].astype(
-        #     float)
-
-    if 'TAU_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['TAU_UPENNBIOMK9_04_19_17']
-               == '>1300', 'TAU_UPENNBIOMK9_04_19_17'] = 1301
-        df.loc[df['TAU_UPENNBIOMK9_04_19_17']
-               == '<80', 'TAU_UPENNBIOMK9_04_19_17'] = 79
-        df['TAU_UPENNBIOMK9_04_19_17'] = df['TAU_UPENNBIOMK9_04_19_17'].astype(
-            float)
-    if 'PTAU_UPENNBIOMK9_04_19_17' in df:
-        df.loc[df['PTAU_UPENNBIOMK9_04_19_17']
-               == '>120', 'PTAU_UPENNBIOMK9_04_19_17'] = 121
-        df.loc[df['PTAU_UPENNBIOMK9_04_19_17']
-               == '<8', 'PTAU_UPENNBIOMK9_04_19_17'] = 7
-        df['PTAU_UPENNBIOMK9_04_19_17'] = df['PTAU_UPENNBIOMK9_04_19_17'].astype(
-            float)
-    print("in clean_data 4")
-
-    # # create feature selection
-    # columns = ['PTID']
-    # columns.append(prediction)
-    # dataset_lower = dataset_name.lower()
-    # if 'demographic' in dataset_lower:
-    #     columns = columns + ['AGE', 'PTRACCAT',
-    #                          'PTETHCAT', 'PTGENDER', 'PTEDUCAT']
-    # if 'apoe4' in dataset_lower:
-    #     columns.append('APOE4')
-    # if 'cogtest' in dataset_lower:
-    #     columns = columns + ['CDRSB', 'ADAS11',
-    #                          'MMSE', 'ADAS13', 'RAVLT_immediate']
-    #
-    # # if 'mripct' in dataset_lower:
-    # #     columns = columns + ['Ventricles', 'Hippocampus',
-    # #                          'WholeBrain', 'Entorhinal', 'MidTemp',
-    # #
     # if 'mripct' in dataset_lower:
     #     columns = columns + ['Ventricles', 'Hippocampus',
     #                          'WholeBrain', 'Entorhinal', 'MidTemp',
-    #                          'pct_Ventricles', 'pct_Hippocampus',
-    #                          'pct_WholeBrain', 'pct_Entorhinal', 'pct_MidTemp']
-    # if 'pet' in dataset_lower:
-    #     columns = columns + ['FDG', 'AV45']
-    # if 'csv' in dataset_lower:
-    #     columns = columns + ['ABETA_UPENNBIOMK9_04_19_17',
-    #                          'TAU_UPENNBIOMK9_04_19_17', 'PTAU_UPENNBIOMK9_04_19_17']
-    # if debug:
-    #     print("grabbing columns: ", columns)
-    # df = df.loc[:, columns]
+    #
+    if 'mripct' in dataset_lower:
+        columns = columns + ['Ventricles', 'Hippocampus',
+                             'WholeBrain', 'Entorhinal', 'MidTemp',
+                             'pct_Ventricles', 'pct_Hippocampus',
+                             'pct_WholeBrain', 'pct_Entorhinal', 'pct_MidTemp']
+    if 'pet' in dataset_lower:
+        columns = columns + ['FDG', 'AV45']
+    if 'csf' in dataset_lower:
+        columns = columns + ['ABETA_UPENNBIOMK9_04_19_17',
+                             'TAU_UPENNBIOMK9_04_19_17', 'PTAU_UPENNBIOMK9_04_19_17']
     if debug:
-        print("df preview1: ", df.head(2), " length: ", df.shape[0])
+        print("in get_data grabbing columns: ", columns)
+
+    # Remove diagnosis that are very infrequent
     if prediction == 'DX':
         df = df.loc[(df['DX'] == 'MCI') | (
             df['DX'] == 'Dementia') | (df['DX'] == 'NL')]
     # elif prediction == 'final_DX':
     #     df = df.loc[(df['final_DX'] == 'MCI') | (
     #         df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
+
+    df = df.loc[:, columns]
+
+    if drop:
+        df.dropna(inplace=True)
+    else:
+        df.fillna(value=0, inplace=True)
+
+    print("in clean_data 3, dropped all but ", df.shape[0], ' rows')
+
     if debug:
         print("df preview2: ", df.head(2))
 
-    # Remove diagnosis that are very infrequent
-
     if debug:
-        print("in cleanup_data returning df: ", df.head(2))
+        print(df['DX'].value_counts())
     return df
-
-
-def return_model_name(dict):
-    tag_elements = []
-    for key in dict.keys():
-        tag_elements.append(dict[key])
-    tag = '_'.join(tag_elements)
-    return tag
-
-
-def get_dataset_name(dict):
-    tag_elements = []
-    for key in dict.keys():
-        if (key != 'model') and (key != 'oversampling') and (key != 'scaling'):
-            tag_elements.append(dict[key])
-    tag = '_'.join(tag_elements)
-    return tag
 
 
 def get_data(dataset_name, oversampling, scaling, prediction):
     save = 0
     if debug:
+        print("dataset_name, oversampling, scaling, prediciton: ",
+              dataset_name, oversampling, scaling, prediction)
+    if debug:
         print("in get_data using dataset:", dataset_name)
-    # if prediction == 'DX':
     raw_data = 'Data/raw_data_subset.csv'
     # elif prediction == 'final_DX':
     #     raw_data = 'Data/TADPOLE_D1_D2_finalDX.csv'
@@ -164,28 +115,20 @@ def get_data(dataset_name, oversampling, scaling, prediction):
         try:
             df = pd.read_csv(raw_data)
             drop = True
-            if debug:
-                print("before cleanup_data")
             df = cleanup_data(dataset_name, df, drop, prediction)
-            df.to_csv(filename, index=False)
+            df.sort_values(by='PTID', inplace=True)
+            df.to_csv('testcsv.csv', index=False)
             # df.to_csv("TADPOLE_subset_raw.csv", index=False)
         except Exception as e:
             if debug:
                 print("in get_data, error: ", e)
-    if debug:
-        print("in get_data before populate_X_y")
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
     if debug:
         print("in get_data after populate_X_y, X length: ", len(X))
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    if debug:
-        print("in get_data after train test split")
     X_train, X_test = scale_features(scaling, X_train, X_test)
-    if debug:
-        print("in get_data after scale fealtures")
     X_train, y_train = oversample(oversampling, X_train, y_train)
-    if debug:
-        print("in get_data after oversample")
+
     return X_train, X_test, y_train, y_test
 
 
@@ -290,6 +233,23 @@ def add_sum_column(df):
     return df
 
 
+def return_model_name(dict):
+    tag_elements = []
+    for key in dict.keys():
+        tag_elements.append(dict[key])
+    tag = '_'.join(tag_elements)
+    return tag
+
+
+def get_dataset_name(dict):
+    tag_elements = []
+    for key in dict.keys():
+        if (key != 'model') and (key != 'oversampling') and (key != 'scaling'):
+            tag_elements.append(dict[key])
+    tag = '_'.join(tag_elements)
+    return tag
+
+
 def add_final_dx_column(df):
     for dx in ['Dementia', 'MCI', "NL"]:
         if dx in df['DX'].values:
@@ -306,9 +266,6 @@ def show_data(df, category):
 def populate_X_y(df, y_cat, encode_list):
     y = df[y_cat]
     X = df.drop(columns=[y_cat, 'PTID'])
-#   X = df.drop(columns=[y_cat, 'PTID'])
-# todo replace following line with one above
-#   X = df.drop(columns=[y_cat])
     label_encoder = LabelEncoder()
     for label in encode_list:
         if label in X:

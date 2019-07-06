@@ -74,45 +74,48 @@ def getdata(dict):
             dataset_name, oversampling, scaling, prediction)
         model = adt.load_model(model_name)
         metrics = adt.evaluate_model(model, X_test, y_test)
-        class_report = metrics['class_report']
-        score = metrics['score']
-        size = len(X_train)
-        data = [
-            {"x": metrics['fpr'][0], "y": metrics['tpr']
-             [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
-            {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
-             "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
-            {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
-             "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
-        ]
-        layout = {
-            'title': {
-                'text': 'Score: ' + str(score) + '<br>Training set size: ' + str(size)
-            },
-            'xaxis': {
-                'title': {
-                    'text': 'False Positive Rate'
-                }
-            },
-            'yaxis': {
-                'title': {
-                    'text': 'True Positive Rate'
-                }
-            }
-        }
-        response = {
-            'data': data,
-            'score': score,
-            'class_report': class_report,
-            'size': size,
-            'layout': layout,
-            'success': 1
-        }
-    except:
-        response = {
-            'success': 0
-        }
 
+        response = adt.eval_and_report(model, X_test, y_test, len(X_train))
+    #
+    #     class_report = metrics['class_report']
+    #     score = metrics['score']
+    #     size = len(X_train)
+    #     data = [
+    #         {"x": metrics['fpr'][0], "y": metrics['tpr']
+    #          [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
+    #         {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
+    #          "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
+    #         {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
+    #          "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
+    #     ]
+    #     layout = {
+    #         'title': {
+    #             'text': 'Score: ' + str(score) + '<br>Training set size: ' + str(size)
+    #         },
+    #         'xaxis': {
+    #             'title': {
+    #                 'text': 'False Positive Rate'
+    #             }
+    #         },
+    #         'yaxis': {
+    #             'title': {
+    #                 'text': 'True Positive Rate'
+    #             }
+    #         }
+    #     }
+    #     response = {
+    #         'data': data,
+    #         'score': score,
+    #         'class_report': class_report,
+    #         'size': size,
+    #         'layout': layout,
+    #         'success': 1
+    #     }
+    # except:
+    #     response = {
+    #         'success': 0
+    #     }
+    #
     return jsonify(response)
 
 
