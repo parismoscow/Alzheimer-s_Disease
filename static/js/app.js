@@ -3,7 +3,11 @@ function displayReport(modelStats) {
   layout = modelStats['layout']
   d3.select("#status").text("")
   Plotly.newPlot("roc_curve", data, layout)
-  d3.select("#class_report").html(modelStats['class_report'])
+
+
+  d3.select("#class_report")
+  .append('textarea').attr('cols', 60).attr('rows', 10)
+  .text(modelStats['class_report'])
   console.log(modelStats['class_report']);
 }
 
@@ -13,7 +17,7 @@ async function selectionChanged () {
   // clear LogisticRegression
   d3.select('#status').text("Collecting data...")
   d3.select('#roc_curve').text("")
-  d3.select('#class_report').text("")
+  // d3.select('#class_report').text("")
 
   // create dictionary of user selection
   dict['model'] = d3.select('#model').property('value')
@@ -54,22 +58,4 @@ async function selectionChanged () {
     d3.select('#status').text("Model could not be trained")
   else if (modelStats['success'] == 0)
     d3.select('#status').text("Model could not be evaluated")
-
-  // else {
-  //   // d3.select('#status').text("This should not happen...")
-  //   // const modelStats = await d3.json(`/newmodel/${temp}`)
-  //   // d3.select('#status').text("")
-  //   // if (modelStats['success'] == -1) {
-  //   //     d3.select('#status').text("The data set is not available")
-  //   //   console.log("this dataset is not available")
-  //   // }
-  //   // else if (modelStats['success'] == 0) {
-  //   //   d3.select('#status').text("There was an issue with obtaining the model ("+modelStats['error'] +")")
-  //   //   console.log("There was an issue with obtaining a model");
-  //   // }
-  //   // else {
-  //   //   // if successful display model stats
-  //   //   displayReport(modelStats)
-  //   // }
-  // }
 }
