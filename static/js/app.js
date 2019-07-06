@@ -21,7 +21,7 @@ function displayReport(modelStats) {
     console.log(`${key}: ${value}`);
     let row = d3.select('#class-table').append('tr')
 
-    if (key !== 'accuracy'){
+    if (key === 'accuracy'){
       row.append('td').text(key)
       row.append('td').text(value)
     }
@@ -32,8 +32,17 @@ function displayReport(modelStats) {
       row.append('td').text(value["f1-score"])
       row.append('td').text(value.support)
     }
+
+
+
   }
 
+
+
+
+  // d3.select("#class_report")
+  // .html(modelStats['class_report'])
+  // console.log(modelStats['class_report']);
 
   let header = d3.select('#features')
   .append('table').property('border', 1).property('id', 'features-table').append('thead')
@@ -54,7 +63,13 @@ function displayReport(modelStats) {
 
 }
 
+function clear_screen(){
+  d3.select('#features-table').exit()
+  d3.select('#class-table')
+}
+
 async function selectionChanged () {
+  clear_screen()
   // Fetch new data each time a new selection is made
   const dict  = {}
   // clear LogisticRegression
