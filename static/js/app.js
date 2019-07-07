@@ -63,9 +63,11 @@ function clear_screen(){
 }
 
 async function selectionChanged () {
+  document.getElementById("tree-image").style.display = "none";
+
   // clear_screen()
-  // d3.select('#features-table').remove()
-  // d3.select('#class-table').remove()
+  d3.select('#features-table').remove()
+  d3.select('#class-table').remove()
 
   // d3.select('#fitext').remove()
   // d3.select("#classtext").remove()
