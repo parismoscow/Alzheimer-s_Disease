@@ -46,13 +46,23 @@ function displayReport(modelStats) {
   header.append('td').text('Importance')
 
   features = modelStats['features']
-  console.log(`features are: ${features}`)
+  var sorted = [];
+  for(var key in features) {
+    sorted[sorted.length] = key;
+  }
 
-  for (const [key, value] of Object.entries(features)){
-    console.log(`${key}: ${value}`);
-    let row = d3.select('#features-table').append('tr')
-    row.append('td').text(value)
-    row.append('td').text(f(key))
+  sorted.sort();
+  sorted.reverse();
+  // console.log(`features are: ${sorted}`)
+
+  for (var i = 0; i < sorted.length; i++) {
+      //Do something
+      key = sorted[i]
+      value = features[key]
+      console.log(`key ${key}: ${value}`);
+      let row = d3.select('#features-table').append('tr')
+      row.append('td').text(value)
+      row.append('td').text(f(key))
   }
 }
 
