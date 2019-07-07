@@ -244,16 +244,16 @@ def visualize_tree(model, feature_list):
     tree = model.estimators_[0]
 
     # Export the image to a dot file
-    export_graphviz(tree, out_file='tree.dot',
-                    feature_names=feature_list, rounded=True, precision=1)
+    # export_graphviz(tree, out_file='tree.dot',
+    #                 feature_names=feature_list, rounded=True, precision=1)
 
     # Use dot file to create a graph
-    (graph, ) = pydot.graph_from_dot_file('tree.dot')
+    # (graph, ) = pydot.graph_from_dot_file('tree.dot')
 
     # Write graph to a png file
-    os.path.join('Data', 'raw_data_subset' + '.csv')
-    graph.write_png(os.path.join('static', 'images', 'tree.png'))
-    print('writing ', os.path.join('static', 'images', 'tree.png'))
+    # os.path.join('Data', 'raw_data_subset' + '.csv')
+    # graph.write_png(os.path.join('static', 'images', 'tree.png'))
+    # print('writing ', os.path.join('static', 'images', 'tree.png'))
 
 
 def eval_and_report(model, X_test, y_test, size, X_features):
