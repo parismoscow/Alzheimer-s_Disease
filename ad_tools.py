@@ -158,51 +158,55 @@ def model_exists(model_name):
 
 
 def load_model(model_name):
+    # TODO: if model is not dnn load .sav file; otherwise, load dnn file(s)
     model_file = os.path.join('Models', model_name + '.sav')
     print("Looking for file: ", model_file)
-    model = pickle.load(open(model_file, 'rb'))
+    if not 'dnn' in model_name:
+        model = pickle.load(open(model_file, 'rb'))
     return model
 
-
-def build_NN_builder(dim):
-    from keras.models import Sequential
-    from keras.wrappers.scikit_learn import KerasClassifier
-    from keras.callbacks import EarlyStopping
-    from keras.layers import Dense
-
-    def model_no_args():
-        classifier = Sequential()
-        classifier.add(Dense(units=6, activation='relu', input_dim=dim))
-        classifier.add(Dense(units=6, activation='relu'))
-        classifier.add(Dense(units=6, activation='relu'))
-        classifier.add(Dense(units=6, activation='relu'))
-        classifier.add(Dense(units=4, activation='relu'))
-        classifier.add(Dense(units=4, activation='relu'))
-        classifier.add(Dense(units=4, activation='relu'))
-        classifier.add(Dense(units=4, activation='relu'))
-
-        classifier.add(Dense(units=3, activation='softmax'))
-
-        classifier.compile(
-            optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        return classifier
-
-    return model_no_args
-
-
-def build_nn_for_skl(dim):
-    from keras.models import Sequential
-    from keras.wrappers.scikit_learn import KerasClassifier
-    from keras.callbacks import EarlyStopping
-    from keras.layers import Dense
-
-    return KerasClassifier(
-        build_NN_builder(dim),
-        epochs=300,
-        shuffle=True,
-        verbose=2,
-        callbacks=[EarlyStopping(monitor='acc', patience=20, verbose=2)]
-    )
+#
+# def build_NN_builder(dim):
+#     from keras.models import Sequential
+#     from keras.wrappers.scikit_learn import KerasClassifier
+#     from keras.callbacks import EarlyStopping
+#     from keras.layers import Dense
+#
+#     def model_no_args():
+#         classifier = Sequential()
+#         classifier.add(Dense(units=6, activation='relu', input_dim=dim))
+#         classifier.add(Dense(units=6, activation='relu'))
+#         classifier.add(Dense(units=6, activation='relu'))
+#         classifier.add(Dense(units=6, activation='relu'))
+#         classifier.add(Dense(units=4, activation='relu'))
+#         classifier.add(Dense(units=4, activation='relu'))
+#         classifier.add(Dense(units=4, activation='relu'))
+#         classifier.add(Dense(units=4, activation='relu'))
+#
+#         classifier.add(Dense(units=3, activation='softmax'))
+#
+#         classifier.compile(
+#             optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+#         return classifier
+#
+#     return model_no_args
+#
+#
+# def build_nn_for_skl(dim):
+#     from keras.models import Sequential
+#     from keras.wrappers.scikit_learn import KerasClassifier
+#     from keras.callbacks import EarlyStopping
+#     from keras.layers import Dense
+#
+#     return KerasClassifier(
+#         build_NN_builder(dim),
+#         epochs=300,
+#         shuffle=True,
+#         verbose=2,
+#         callbacks=[EarlyStopping(monitor='acc', patience=20, verbose=2)]
+#     )
+#
+#
 
 
 def train_model(model_name, X_train, y_train):
@@ -225,7 +229,8 @@ def train_model(model_name, X_train, y_train):
 
     if debug:
         print("saving model to ", model_file)
-    # pickle.dump(model, open(model_file, 'wb'))
+    if not 'dnn' in model_name.lower():
+        pickle.dump(model, open(model_file, 'wb'))
 
     return model
 

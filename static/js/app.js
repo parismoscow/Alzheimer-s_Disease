@@ -2,6 +2,8 @@ function displayReport(modelStats) {
   data = modelStats['data']
   layout = modelStats['layout']
   d3.select("#status").text("")
+  d3.select('#fitext').text("")
+  d3.select("classtestxt").text("")
   Plotly.newPlot("roc_curve", data, layout)
 
   const classReport = modelStats['class_report']
@@ -11,7 +13,7 @@ function displayReport(modelStats) {
   var f = d3.format(".3f");
 
   let classHeader = d3.select('#class_report')
-  .text('Classification Report').attr('id', 'classtext')
+  // .text('Classification Report').attr('id', 'classtext')
   .append('table').property('id', 'class-table').append('thead')
 
   classHeader.append('td').text('')
@@ -36,19 +38,15 @@ function displayReport(modelStats) {
       row.append('td').text(f(value.support))
     }
   }
-
   let header = d3.select('#features')
-  .text('Feature Importance').property('id', 'fitext')
+  // .text('Feature Importance').property('id', 'fitext')
   .append('table').property('id', 'features-table')
-
-  // .append('thead')
-  //
-  // header.append('td').text('Feature')
-  // header.append('td').text('Importance')
+  .append('thead')
+  header.append('td').text('Feature')
+  header.append('td').text('Importance')
 
   features = modelStats['features']
   console.log(`features are: ${features}`)
-
 
   for (const [key, value] of Object.entries(features)){
     console.log(`${key}: ${value}`);
@@ -56,8 +54,8 @@ function displayReport(modelStats) {
     row.append('td').text(value)
     row.append('td').text(f(key))
   }
-
 }
+
 
 function clear_screen(){
   d3.select('#features').exit().remove()
@@ -66,10 +64,11 @@ function clear_screen(){
 
 async function selectionChanged () {
   // clear_screen()
-  d3.select('#features-table').exit().remove()
-  d3.select('#class_report-table').exit().remove()
-  d3.select('#fitext').exit().remove()
-  d3.select("#classtext").exit().remove()
+  // d3.select('#features-table').remove()
+  // d3.select('#class-table').remove()
+
+  // d3.select('#fitext').remove()
+  // d3.select("#classtext").remove()
   // Fetch new data each time a new selection is made
   const dict  = {}
   // clear LogisticRegression
