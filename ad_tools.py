@@ -235,12 +235,34 @@ def train_model(model_name, X_train, y_train):
     return model
 
 
+def visualize_tree(model, feature_list):
+    # Import tools needed for visualization
+    from sklearn.tree import export_graphviz
+    import pydot
+
+    # Pull out one tree from the forest
+    tree = model.estimators_[0]
+
+    # Export the image to a dot file
+    export_graphviz(tree, out_file='tree.dot',
+                    feature_names=feature_list, rounded=True, precision=1)
+
+    # Use dot file to create a graph
+    (graph, ) = pydot.graph_from_dot_file('tree.dot')
+
+    # Write graph to a png file
+    os.path.join('Data', 'raw_data_subset' + '.csv')
+    graph.write_png(os.path.join('static', 'images', 'tree.png'))
+    print('writing ', os.path.join('static', 'images', 'tree.png'))
+
+
 def eval_and_report(model, X_test, y_test, size, X_features):
     try:
         metrics = evaluate_model(model, X_test, y_test, X_features)
         class_report = metrics['class_report']
         score = metrics['score']
         features = metrics['features']
+
         # size = len(X_train)
         data = [
             {"x": metrics['fpr'][0], "y": metrics['tpr']
@@ -279,13 +301,17 @@ def eval_and_report(model, X_test, y_test, size, X_features):
         response = {
             'success': 0
         }
+    try:
+        visualize_tree(model, X_features)
+    except Exception as e:
+        print('error saving png file: ', e)
     # print("returning to js: ", jsonify(response))
     return (response)
 
 
 def evaluate_model(model, X_test, y_test, X_features):
     # print("in evaluate model, received ", X_test, y_test)
-    features = ""
+
     score = round(model.score(X_test, y_test), 4)
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
@@ -298,7 +324,7 @@ def evaluate_model(model, X_test, y_test, X_features):
         print("got features: ", features)
     except:
         print("could not find feature_importances_ in model ", model)
-        features = ""
+        features = [(-1, -1)]
 
     metrics = {
         'score': score,

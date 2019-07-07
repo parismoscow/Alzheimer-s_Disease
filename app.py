@@ -121,6 +121,11 @@ def resources():
     return render_template("resources.html")
 
 
+@app.route("/treeimage")
+def treeimage():
+    return render_template("treeimage.html")
+
+
 @app.route("/demographics")
 def demograhpics():
     return render_template("demographics.html")

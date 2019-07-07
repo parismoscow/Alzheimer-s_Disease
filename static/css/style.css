@@ -43,4 +43,20 @@ thead {
   font-weight: bold;
 }
 
+.hidden { display: none; }
+.unhidden { display: block; }
+
+#tree-image{
+  width: 80%;
+  /* height: 200px; */
+  margin: 12px auto;
+  /* overflow-x: hidden; */
+}
+
+#scroll-div {
+  overflow: auto;
+  max-width: 800px;
+  max-height: 600px;
+}
+
 tr:nth-child(even) {background-color: #f2f2f2;}

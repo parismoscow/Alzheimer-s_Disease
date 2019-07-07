@@ -95,10 +95,6 @@
 
           <br><br>
           <p><input type="button" value="submit" onclick="selectionChanged(this.value)"></p>
-
-
-
-
         </form>
       </div>
 
@@ -120,49 +116,17 @@
         <br><br>
 
         <div class="" id='features'>
-
-
         </div>
-
+        <br><br>
         {% if url_for('static', filename='images/tree.png') %}
-        <div id="tree-image">
-          <img src="{{ url_for('static', filename='images/tree.png') }}" alt="">
+        <div id="tree-image" id='scroll-div'>
+          <br>
+          <a href="/treeimage" target="_blank"><img src="{{ url_for('static', filename='images/tree.png') }}" alt="random tree example" style="width: 50%"> </a>
         </div>
         {% endif %}
-
       </div>
-      <!-- <div class="" id='class_report'>
-          <h1>Classification Report</h1>
-          <div class="row">
-            <div class="col-md-12">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Precision</th>
-                    <th>Recall</th>
-                    <th>f-1 Score</th>
-                    <th>Support</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-        </div> -->
-
-
-
     </div>
   </div>
-
-  <div>
-    <div style="text-align:center">
-      <!-- <h4>Random Forest Example</h4> -->
-    </div>
-    <!-- <img src="{{ url_for('static', filename='images/tree.png') }}" alt="bad pic" style="width:1500px"> -->
-
-  </div>
-
 
   <footer>
     Team Members: Logan Caldwell, John Chambers, Jasmina Jovanovic, and Ediya Yumukoff

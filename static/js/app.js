@@ -13,7 +13,6 @@ function displayReport(modelStats) {
   var f = d3.format(".3f");
 
   let classHeader = d3.select('#class_report')
-  // .text('Classification Report').attr('id', 'classtext')
   .append('table').property('id', 'class-table').append('thead')
 
   classHeader.append('td').text('')
@@ -38,50 +37,53 @@ function displayReport(modelStats) {
       row.append('td').text(f(value.support))
     }
   }
-  let header = d3.select('#features')
-  // .text('Feature Importance').property('id', 'fitext')
-  .append('table').property('id', 'features-table')
-  .append('thead')
-  header.append('td').text('Feature')
-  header.append('td').text('Importance')
+console.log(`modelstats features are ${modelStats['features'][0]}`)
+console.log(modelStats['features']);
+  if (!("-1" in  modelStats['features'])){
+    let header = d3.select('#features')
+    // .text('Feature Importance').property('id', 'fitext')
+    .append('table').property('id', 'features-table')
+    .append('thead')
+    header.append('td').text('Feature')
+    header.append('td').text('Importance')
 
-  features = modelStats['features']
-  var sorted = [];
-  for(var key in features) {
-    sorted[sorted.length] = key;
+    features = modelStats['features']
+    var sorted = [];
+    for(var key in features) {
+      sorted[sorted.length] = key;
+    }
+
+    sorted.sort();
+    sorted.reverse();
+    // console.log(`features are: ${sorted}`)
+
+    for (var i = 0; i < sorted.length; i++) {
+        //Do something
+        key = sorted[i]
+        value = features[key]
+        console.log(`key ${key}: ${value}`);
+        let row = d3.select('#features-table').append('tr')
+        row.append('td').text(value)
+        row.append('td').text(f(key))
+    }
+
+
+    // d3.select('#tree-image-caption').text("Sample random tree")
+    d3.select('#tree-image').attr("class",'unhidden')
   }
 
-  sorted.sort();
-  sorted.reverse();
-  // console.log(`features are: ${sorted}`)
-
-  for (var i = 0; i < sorted.length; i++) {
-      //Do something
-      key = sorted[i]
-      value = features[key]
-      console.log(`key ${key}: ${value}`);
-      let row = d3.select('#features-table').append('tr')
-      row.append('td').text(value)
-      row.append('td').text(f(key))
-  }
 }
 
 
 function clear_screen(){
-  d3.select('#features').exit().remove()
-  d3.select('#class_report').exit().remove()
+  d3.select('#features-table').remove()
+  d3.select('#class-table').remove()
+  d3.select('#tree-image').attr("class",'hidden')
 }
 
 async function selectionChanged () {
-  document.getElementById("tree-image").style.display = "none";
+  clear_screen()
 
-  // clear_screen()
-  d3.select('#features-table').remove()
-  d3.select('#class-table').remove()
-
-  // d3.select('#fitext').remove()
-  // d3.select("#classtext").remove()
-  // Fetch new data each time a new selection is made
   const dict  = {}
   // clear LogisticRegression
   d3.select('#status').text("Collecting data...")
@@ -128,3 +130,8 @@ async function selectionChanged () {
   else if (modelStats['success'] == 0)
     d3.select('#status').text("Model could not be evaluated")
 }
+
+(function init() {
+  console.log("initializing page....");
+  clear_screen()
+}) ()

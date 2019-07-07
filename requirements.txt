@@ -25,3 +25,6 @@ tensorflow-estimator==1.14.0
 tensorflow-hub==0.4.0
 tensorflow-metadata==0.13.0
 tensorflow-probability==0.7.0
+pydot==1.3.0
+pydot-ng==2.0.0
+pydotplus==2.0.2
