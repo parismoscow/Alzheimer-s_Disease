@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
@@ -109,7 +110,7 @@ def create_new_dataset(dataset_name, prediction):
         print("This diagnosis is not yet supported")
 
     if debug:
-        print("in create_new_dataset: dataset_name, prediciton: ",
+        print("in create_new_dataset: dataset_name, prediction: ",
               dataset_name, prediction)
     filename = os.path.join('Data', dataset_name + '.csv')
     try:
@@ -256,12 +257,14 @@ def visualize_tree(model, feature_list):
     # print('writing ', os.path.join('static', 'images', 'tree.png'))
 
 
-def eval_and_report(model, X_test, y_test, size, X_features):
+def eval_and_report(model, X_test, y_test, size, X_features, X_train, y_train):
     try:
-        metrics = evaluate_model(model, X_test, y_test, X_features)
+        metrics = evaluate_model(
+            model, X_test, y_test, X_features, X_train, y_train)
         class_report = metrics['class_report']
         score = metrics['score']
         features = metrics['features']
+        cross_val_score = metrics['cross_val_score']
 
         # size = len(X_train)
         data = [
@@ -274,7 +277,8 @@ def eval_and_report(model, X_test, y_test, size, X_features):
         ]
         layout = {
             'title': {
-                'text': 'Score: ' + str(score) + '<br>Training set size: ' + str(size)
+                'text': 'Score: ' + str(score) + '<br>Cross Validated Score (mean): ' + str(cross_val_score) +
+                '<br>Training set size: ' + str(size)
             },
             'xaxis': {
                 'title': {
@@ -290,6 +294,7 @@ def eval_and_report(model, X_test, y_test, size, X_features):
         response = {
             'data': data,
             'score': score,
+            'cross_val_score': cross_val_score,
             'class_report': class_report,
             'features': features,
             'size': size,
@@ -309,13 +314,13 @@ def eval_and_report(model, X_test, y_test, size, X_features):
     return (response)
 
 
-def evaluate_model(model, X_test, y_test, X_features):
-    # print("in evaluate model, received ", X_test, y_test)
+def evaluate_model(model, X_test, y_test, X_features, X_train, y_train):
 
     score = round(model.score(X_test, y_test), 4)
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
     class_report = classification_report(y_test, predictions, output_dict=True)
+    cv_score = round(cross_val_score(model, X_train, y_train, cv=5).mean(), 4)
     roc_auc, fpr, tpr = return_roc(y_test, model.predict_proba(X_test))
     try:
         feature_importances = model.feature_importances_
@@ -328,6 +333,7 @@ def evaluate_model(model, X_test, y_test, X_features):
 
     metrics = {
         'score': score,
+        'cross_val_score': cv_score,
         'class_report': class_report,
         'roc_auc': roc_auc,
         'features': dict(features),

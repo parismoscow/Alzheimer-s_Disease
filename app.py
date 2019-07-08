@@ -99,9 +99,10 @@ def getdata(dict):
         return jsonify(response)
 
     model = adt.load_model(model_name)
-    metrics = adt.evaluate_model(model, X_test, y_test, X_features)
+    # metrics = adt.evaluate_model(
+    #     model, X_test, y_test, X_features, X_train, y_train)
     response = adt.eval_and_report(
-        model, X_test, y_test, len(X_train), X_features)
+        model, X_test, y_test, len(X_train), X_features, X_train, y_train)
 
     return jsonify(response)
 
