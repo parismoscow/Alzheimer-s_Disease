@@ -143,7 +143,7 @@ def get_data(dataset_name, oversampling, scaling, prediction):
     X_train, X_test = scale_features(scaling, X_train, X_test)
     X_train, y_train = oversample(oversampling, X_train, y_train)
 
-    return X_train, X_test, y_train, y_test, X.columns
+    return X_train, X_test, y_train, y_test, X.columns, X, y
 
 
 def dataset_exists(dataset_name):
@@ -257,10 +257,10 @@ def visualize_tree(model, feature_list):
     # print('writing ', os.path.join('static', 'images', 'tree.png'))
 
 
-def eval_and_report(model, X_test, y_test, size, X_features, X_train, y_train):
+def eval_and_report(model, X_test, y_test, size, X_features, X, y):
     try:
         metrics = evaluate_model(
-            model, X_test, y_test, X_features, X_train, y_train)
+            model, X_test, y_test, X_features, X, y)
         class_report = metrics['class_report']
         score = metrics['score']
         features = metrics['features']
@@ -314,13 +314,13 @@ def eval_and_report(model, X_test, y_test, size, X_features, X_train, y_train):
     return (response)
 
 
-def evaluate_model(model, X_test, y_test, X_features, X_train, y_train):
+def evaluate_model(model, X_test, y_test, X_features, X, y):
 
     score = round(model.score(X_test, y_test), 4)
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
     class_report = classification_report(y_test, predictions, output_dict=True)
-    cv_score = round(cross_val_score(model, X_train, y_train, cv=5).mean(), 4)
+    cv_score = round(cross_val_score(model, X, y, cv=5).mean(), 4)
     roc_auc, fpr, tpr = return_roc(y_test, model.predict_proba(X_test))
     try:
         feature_importances = model.feature_importances_

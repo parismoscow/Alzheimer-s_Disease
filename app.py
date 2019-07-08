@@ -25,7 +25,7 @@ def newmodel(dict):
     # check if data is available
     dataset_name = adt.get_dataset_name(dict)
     try:
-        X_train, X_test, y_train, y_test = adt.get_data(
+        X_train, X_test, y_train, y_test, X, y = adt.get_data(
             dataset_name, oversampling, scaling, prediction)
     except:
         # if not call to /generatedataset
@@ -84,7 +84,7 @@ def getdata(dict):
         return jsonify(response)
 
     # populate X and y, split, oversample, scale data
-    X_train, X_test, y_train, y_test, X_features = adt.get_data(
+    X_train, X_test, y_train, y_test, X_features, X, y = adt.get_data(
         dataset_name, oversampling, scaling, prediction)
 
     try:
@@ -102,7 +102,7 @@ def getdata(dict):
     # metrics = adt.evaluate_model(
     #     model, X_test, y_test, X_features, X_train, y_train)
     response = adt.eval_and_report(
-        model, X_test, y_test, len(X_train), X_features, X_train, y_train)
+        model, X_test, y_test, len(X_train), X_features, X, y)
 
     return jsonify(response)
 
