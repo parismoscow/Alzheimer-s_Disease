@@ -30,7 +30,7 @@
             <a class="nav-link" href="/">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/data">Data</a>
+            <a class="nav-link" href="/methodology">Methodology</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/models">Models</a>
@@ -53,10 +53,12 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-lg-8" id="maptext">
+
           <h3>About the Data</h3>
           <h6>The Alzheimer's Disease data used in this project was used with permission by The Alzheimer's Disease Prediction
             of Longitudinal Evolution (<a href="https://tadpole.grand-challenge.org/Home/">TADPOLE</a>) challenge.
           </h6>
+
           <h6>The data consists of individuals who have agreed to participate in the Alzheimer's Diease Neuroimaging
             Initiative (ADNI). The provided features include various biomarkers taken from brain scans as well the results of
             cognitive tests. Patients are given one of the following diagnoses:
@@ -65,15 +67,55 @@
             <ul>
               <li>CN - cognitively normal</li>
               <li>MCI - mild cognitive impairment</li>
-              <li>AD - probable Alzheimer's Disease</li>
+              <li>Dementia - probable Alzheimer's Disease</li>
 
             </ul>
           </h6>
+          <h3>Our Approach</h3>
+          <h6>We focused on using the TADPOLE dataset to predict current diagnosis based on the smallest subset of test available for each patient,
+            as well as predicting future onset of Alzheimer's disease for at risk patients. The latter is the more challenging problem
+            that woud allow researchers to identify those individuals who would develop AD later for evaluation of preventive treatments.
+          </h6>
+          <br>
+          <h5>Classification Algorithms</h5>
+          <h6> We trained and evaluated multiple classification algorithms: Random Forest, Logistic Regression, SVC and Deep Neural Networks.
+            For each classifier, we included different options for pre-processing the data using oversampling and scaling. Deep Neural Networks performed
+            poorely on this dataset, so we dropped those from the model selection.
+          </h6>
+          <br>
+          <h5>Feature Selection</h5>
+          <h6>Feature Selection was a key step. We focused on collecting rows that had a value in all of the selected features column, and
+            dropped the rest. This resulted in drastically reduced number of rows of data the more features were selected. This highlighted the need
+            for doing feature selection in order to increase the input data size. Features selection is also important in deciding which tests are
+            best predictors of current or future dementia since some of the tests are expensive and/or intrusive.
+            <br><br>
+            We used SelectKBest in addition to RandomForest feature improtance list to identify those feature that are best at predicting current and Future
+            dementia diagnosis. Consistently, cognitive tests and PET scan (FDG and AV45) were ranked highest.
+            <br><br>
+            <h5>Cross Validation</h5>
+            To prevent overfitting by our models, we used K-fold cross validation (k=5) to verify the accuracy reported by our classifiers. The results
+            reported by k-fold verification and our models were very similar.
 
+            <br><br>
+            <h5>Predicting Future Diagnosis</h5>
+            The more challenging problem is to predict future diagnosis of AD, which is to identify patients that are at risk for developing AD. To do this, we
+            added a column to each patient's record that was set to the last diagnosis this patient received. Since patients were in the stud for multiple years,
+            in some cases this meant setting a value to AD years before it was diagnosed. Using this approach achived a remarkable accurac of close to 90% for predicting
+            AD, but the model also required a lot of features to make this prediction.
+            <br><br>
+            <h5>Changes in Values Over Time</h5>
+            We tested the hypothesis that changes over time (e.g. thickness of some regions of the brain as measured on the MRI scans) would be good predictors of AD. In order to test this hypothesis, we
+            added new columns to the data tables that showed % changes over time as well as a rate of change over time. However, these columns did not
+            prove to be better predictors compared to absolute values thickness. This is most likely due to high variation in the thickness results over time.
+          </h6>
+          <br><br>
           <h3>Challenges Faced</h3>
           <h6>The main TADPOLE spreadsheet consists of over 12,000 rows and 1,900 columns. Many of the columns contained missing
-            data as not all patients underwent the same testing procedures. The abundance of biomarkers made feature selection data.
-            In addition, the data was heavily imbalanced resulting in some additional clean up problems.
+            data as not all patients underwent the same testing procedures. The abundance of biomarkers made feature selection challenging.
+            In addition, the data was heavily imbalanced resulting in the need to use various oversampling techniques.
+
+            Data related to MRI and PET scan images showed some unexpected variations, most likely due to different calibrations of the measuring instruments
+            which made it more difficult for the models to rely on changes in MRI measurements over time as a predictor of AD.
           </h6>
         </div>
 

@@ -32,7 +32,7 @@
             <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/data">Data</a>
+            <a class="nav-link" href="/methodology">Methodology</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/models">Models</a>
@@ -59,7 +59,7 @@
             <option value="rf">Random Forest</option>
             <option value="svc">SVC</option>
             <option value="lr">Logistic Regression</option>
-            <option value="dnn">Deep Neural Net</option>
+            <!-- <option value="dnn">Deep Neural Net</option> -->
           </select>
           <br><br>
           <!-- <h4>Prediction</h4> -->
@@ -92,8 +92,10 @@
           <input type="checkbox" name="mripct" value="mripct" id='mripct'> MRI with % change<br>
           <input type="checkbox" name="pet" value="pet" checked id='pet'> PET<br>
           <input type="checkbox" name="csf" value="csf" id='csf'> CSF<br>
-
+          <br>
+          <input type="checkbox" name="cv" value="cv" id='cv'> Cross Validate <br>
           <br><br>
+
           <p><input type="button" value="submit" onclick="selectionChanged(this.value)"></p>
         </form>
       </div>
@@ -102,22 +104,26 @@
         <br><br>
 
         <h5 class='centered' id='status'>
-
         </h5>
+
         <div class="" id='roc_curve'>
-          <!-- <img src="{{ url_for('static', filename='images/tree.png') }}" alt="bad pic" style="width:1500px"> -->
         </div>
 
-        <!-- <textarea rows="10" cols="60" id='class_report' class='centered'>
-        </textarea> -->
+        <div class="" id='cv-boxplot'>
+        </div>
+
+
         <div class="" id='class_report'>
-
         </div>
+
         <br><br>
 
         <div class="" id='features'>
         </div>
+
+
         <br><br>
+
         {% if url_for('static', filename='images/tree.png') %}
         <div id="tree-image" id='scroll-div'>
           <br>
