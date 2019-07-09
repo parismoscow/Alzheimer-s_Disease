@@ -17,8 +17,11 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import make_pipeline as make_pipeline_imb
+from sklearn.model_selection import KFold
 from imblearn.over_sampling import RandomOverSampler
 from sklearn.decomposition import PCA
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, accuracy_score
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix
 from sklearn.linear_model import LogisticRegression
@@ -68,14 +71,14 @@ def cleanup_data(dataset_name, df, drop, prediction):
         columns = columns + ['ABETA_UPENNBIOMK9_04_19_17',
                              'TAU_UPENNBIOMK9_04_19_17', 'PTAU_UPENNBIOMK9_04_19_17']
     if debug:
-        print("in get_data grabbing columns: ", columns)
+        print("in cleanup_data grabbing columns: ", columns)
 
     # Remove diagnosis that are very infrequent
     if prediction == 'DX':
         df = df.loc[(df['DX'] == 'MCI') | (
             df['DX'] == 'Dementia') | (df['DX'] == 'NL')]
     if debug:
-        print("in get_data 1")
+        print("in cleanup_data 1")
     elif prediction == 'final_DX':
         df = df.loc[(df['final_DX'] == 'MCI') | (
             df['final_DX'] == 'Dementia') | (df['final_DX'] == 'NL')]
@@ -130,20 +133,39 @@ def create_new_dataset(dataset_name, prediction):
         return 0
 
 
-def get_data(dataset_name, oversampling, scaling, prediction):
+def get_data(dataset_name, prediction, **kwargs):
+
+    oversampling = kwargs.get('oversampling')
+    scaling = kwargs.get('scaling')
+    split = kwargs.get('split')
+    scale_X = kwargs.get('scale_X')
+
+    # if len(args):
+    #     to_oversample = 1
+    #     oversampling = args[0]
+
     filename = os.path.join('Data', dataset_name + '.csv')
 
     if debug:
         print("dataset", dataset_name, " exists")
 
+    # X_train, X_test, y_train, y_test = []
+
     df = pd.read_csv(filename)
 
     X, y = populate_X_y(df, prediction, ["PTRACCAT", "PTETHCAT", "PTGENDER"])
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    X_train, X_test = scale_features(scaling, X_train, X_test)
-    X_train, y_train = oversample(oversampling, X_train, y_train)
+    columns = X.columns
 
-    return X_train, X_test, y_train, y_test, X.columns, X, y
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+    if scaling:
+        X_train, X_test = scale_features(scaling, X_train, X_test)
+    if scale_X:
+        X = scale_features(scaling, X)
+    if oversampling:
+        X_train, y_train = oversample(oversampling, X_train, y_train)
+
+    return X_train, X_test, y_train, y_test, columns, X, y
 
 
 def dataset_exists(dataset_name):
@@ -226,6 +248,8 @@ def train_model(model_name, X_train, y_train):
     elif 'dnn' in model_name.lower():
         model = build_nn_for_skl(len(X_train[0]))
 
+    if debug:
+        print("in train_model, X_train looks like this: ", X_train)
     model.fit(X_train, y_train)
 
     if debug:
@@ -234,6 +258,74 @@ def train_model(model_name, X_train, y_train):
         pickle.dump(model, open(model_file, 'wb'))
 
     return model
+
+
+def cross_validate(model_name, X, y):
+
+    # y = y.reset_index()
+    y = y.as_matrix()
+
+    kf = KFold(n_splits=5, random_state=42)
+    accuracy = []
+    precision = []
+    recall = []
+    f1 = []
+    auc = []
+
+    if debug:
+        print("in cross_validate: 1, size of X, y: ", len(X), len(y))
+        print("y type is: ", type(y))
+
+    if 'svc' in model_name.lower():
+        classifier = SVC(kernel='linear', probability=True)
+
+    elif 'random forest' in model_name.lower() or 'rf' in model_name.lower():
+        classifier = RandomForestClassifier(n_estimators=200)
+
+    elif 'logistic regression' in model_name.lower() or 'lr' in model_name.lower():
+        classifier = LogisticRegression()
+
+    try:
+
+        for train_indices, test_indices in kf.split(X):
+
+            X_train, X_test = X[train_indices], X[test_indices]
+            y_train, y_test = y[train_indices], y[test_indices]
+            # y_train, y_test = y[1293:6460], y[0:1292]
+
+            if 'smote' in model_name.lower():
+                pipeline = make_pipeline_imb(SMOTE(), classifier)
+            else:
+                pipeline = make_pipeline_imb(
+                    RandomOverSampler(random_state=0), classifier)
+
+            if debug:
+                print("in cross_validate: 2, size of X_train, y_train: ",
+                      len(X_train), len(y_train))
+            #     print("train size, test size: ", len(
+            #         train_indices), len(test_indices))
+            model = pipeline.fit(X_train, y_train)
+            # if debug:
+            #     print("pipeline returns: ", pipeline.transform(X_train))
+            prediction = model.predict(X_test)
+
+            accuracy.append(pipeline.score(X_test, y_test))
+            precision.append(precision_score(
+                y_test, prediction, average=None))
+            recall.append(recall_score(
+                y_test, prediction, average=None))
+            f1.append(f1_score(y_test, prediction, average=None))
+
+    except Exception as e:
+        print("error in k-fold validate: ", e)
+        print("X[train] is: ", X_train)
+        print("Y[train] is: ",  y_train)
+
+    print(f"k-fold accuracy: {accuracy}")
+    print(f"k-fold recall: {recall}")
+    print(f"k-fold precision: {precision}")
+    print(f"k-fold f1: {f1}")
+    return accuracy, precision, recall, f1
 
 
 def visualize_tree(model, feature_list):
@@ -257,28 +349,29 @@ def visualize_tree(model, feature_list):
     # print('writing ', os.path.join('static', 'images', 'tree.png'))
 
 
-def eval_and_report(model, X_test, y_test, size, X_features, X, y):
+def eval_and_report(model, X_test, y_test, size, X_features, X, y, *args):
+    cv = 0
+
+    cv_accuracy_arr = []
+
+    if len(args):
+        cv = 1
+        cv_accuracy_arr = args[0]
+
     try:
         metrics = evaluate_model(
             model, X_test, y_test, X_features, X, y)
         class_report = metrics['class_report']
-        score = metrics['score']
+        if cv:
+            score = round(np.mean(cv_accuracy_arr), 4)
+        else:
+            score = metrics['score']
         features = metrics['features']
-        cross_val_score = metrics['cross_val_score']
 
-        # size = len(X_train)
-        data = [
-            {"x": metrics['fpr'][0], "y": metrics['tpr']
-             [0], "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'},
-            {"x": metrics['fpr'][1], "y": metrics['tpr'][1],
-             "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'},
-            {"x": metrics['fpr'][2], "y": metrics['tpr'][2],
-             "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'},
-        ]
         layout = {
             'title': {
-                'text': 'Score: ' + str(score) + '<br>Cross Validated Score (mean): ' + str(cross_val_score) +
-                '<br>Training set size: ' + str(size)
+                'text': 'Score: ' + str(score)
+                + '<br>Training set size: ' + str(size)
             },
             'xaxis': {
                 'title': {
@@ -291,16 +384,45 @@ def eval_and_report(model, X_test, y_test, size, X_features, X, y):
                 }
             }
         }
+
+        data = [
+            {
+                "x": metrics['fpr'][0],
+                "y": metrics['tpr'][0],
+                "name":'Dementia ROC curve (area:' + str(metrics['roc_auc'][0]) + ')'
+            },
+            {
+                "x": metrics['fpr'][1],
+                "y": metrics['tpr'][1],
+                "name":'MCI ROC curve (area:' + str(metrics['roc_auc'][1]) + ')'
+            },
+            {
+                "x": metrics['fpr'][2],
+                "y": metrics['tpr'][2],
+                "name":'NL ROC curve (area:' + str(metrics['roc_auc'][2]) + ')'
+            },
+        ]
+
+        cv_data = [
+            {
+                "y": cv_accuracy_arr,
+                'type': 'box',
+                "name":  "K - fold Validation Accuracy (K=5)"
+            }
+        ]
+
         response = {
             'data': data,
+            'cv': cv,
+            'cvaccdata': cv_data,
             'score': score,
-            'cross_val_score': cross_val_score,
             'class_report': class_report,
             'features': features,
             'size': size,
             'layout': layout,
             'success': 1
         }
+
     except Exception as e:
         print("inside eval_and_report, issue with evaluating model", e)
         response = {
@@ -320,20 +442,18 @@ def evaluate_model(model, X_test, y_test, X_features, X, y):
     predictions = model.predict(X_test)
     confmatrix = confusion_matrix(y_test, predictions)
     class_report = classification_report(y_test, predictions, output_dict=True)
-    cv_score = round(cross_val_score(model, X, y, cv=5).mean(), 4)
     roc_auc, fpr, tpr = return_roc(y_test, model.predict_proba(X_test))
     try:
         feature_importances = model.feature_importances_
         features = sorted(
             zip(feature_importances, X_features), reverse=False)
-        print("got features: ", features)
+        # print("got features: ", features)
     except:
         print("could not find feature_importances_ in model ", model)
         features = [(-1, -1)]
 
     metrics = {
         'score': score,
-        'cross_val_score': cv_score,
         'class_report': class_report,
         'roc_auc': roc_auc,
         'features': dict(features),
@@ -377,7 +497,8 @@ def add_sum_column(df):
 def return_model_name(dict):
     tag_elements = []
     for key in dict.keys():
-        tag_elements.append(dict[key])
+        if (key != 'cross_validate'):
+            tag_elements.append(dict[key])
     tag = '_'.join(tag_elements)
     return tag
 
@@ -385,7 +506,7 @@ def return_model_name(dict):
 def get_dataset_name(dict):
     tag_elements = []
     for key in dict.keys():
-        if (key != 'model') and (key != 'oversampling') and (key != 'scaling'):
+        if (key != 'model') and (key != 'oversampling') and (key != 'scaling') and (key != 'cross_validate'):
             tag_elements.append(dict[key])
     tag = '_'.join(tag_elements)
     return tag
@@ -424,15 +545,27 @@ def myPCA(X_train, X_test):
     return X_train, X_test
 
 
-def scale_features(scaler, X_train, X_test):
+def scale_features(scaler, X_train, *args):
+
+    X_test_exists = 0
+
+    if len(args):
+        X_test = args[0]
+        X_test_exists = 1
+
     if scaler == 'minmax':
         X_train = MinMaxScaler().fit(X_train).transform(X_train)
-        X_test = MinMaxScaler().fit(X_test).transform(X_test)
+        if X_test_exists:
+            X_test = MinMaxScaler().fit(X_test).transform(X_test)
     elif scaler == 'standard':
         X_train = StandardScaler().fit(X_train).transform(X_train)
-        X_test = StandardScaler().fit(X_test).transform(X_test)
+        if X_test_exists:
+            X_test = StandardScaler().fit(X_test).transform(X_test)
 
-    return X_train, X_test
+    if X_test_exists:
+        return X_train, X_test
+    else:
+        return X_train
 
 
 def oversample(alg, X_train, y_train):

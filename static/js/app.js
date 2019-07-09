@@ -1,10 +1,18 @@
 function displayReport(modelStats) {
+
+  d3.select("#status").text("")
+  // d3.select('#fitext').text("")
+  // d3.select("classtestxt").text("")
+
   data = modelStats['data']
   layout = modelStats['layout']
-  d3.select("#status").text("")
-  d3.select('#fitext').text("")
-  d3.select("classtestxt").text("")
   Plotly.newPlot("roc_curve", data, layout)
+
+  if (modelStats['cv']){
+    cvdata = modelStats['cvaccdata']
+    Plotly.newPlot("cv-boxplot", cvdata)
+    d3.select('#cv-boxplot').attr("class",'unhidden')
+  }
 
   const classReport = modelStats['class_report']
 
@@ -79,6 +87,7 @@ function clear_screen(){
   d3.select('#features-table').remove()
   d3.select('#class-table').remove()
   d3.select('#tree-image').attr("class",'hidden')
+  d3.select('#cv-boxplot').attr("class", 'hidden')
 }
 
 async function selectionChanged () {
@@ -115,6 +124,12 @@ async function selectionChanged () {
   }
   if (d3.select('#csf').property('checked')){
     dict['csf'] = d3.select('#csf').property('value')
+  }
+  if (d3.select("#cv").property('checked')){
+    dict['cross_validate'] = 1
+  }
+  else {
+    dict['cross_validate'] = 0
   }
 
   temp = JSON.stringify(dict);

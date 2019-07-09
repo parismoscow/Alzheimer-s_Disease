@@ -14,53 +14,6 @@ def diseases():
     return render_template("index.html")
 
 
-@app.route("/newmodel/<dict>")
-def newmodel(dict):
-    dict = json.loads(dict)
-    oversampling = dict['oversampling']
-    scaling = dict['scaling']
-    prediction = dict['prediction']
-    model_name = dict['model']
-
-    # check if data is available
-    dataset_name = adt.get_dataset_name(dict)
-    try:
-        X_train, X_test, y_train, y_test, X, y = adt.get_data(
-            dataset_name, oversampling, scaling, prediction)
-    except:
-        # if not call to /generatedataset
-        # print(dataset_name, " is not available")
-        response = {
-            'success': -1
-        }
-        return jsonify(response)
-
-    scaling = dict['scaling']
-    oversampling = dict['oversampling']
-    # if data available, scale if necessary
-    if scaling:
-        X_train, X_test = adt.scale_features(scaling, X_train, X_test)
-    # check if oversampling is needed
-    if oversampling:
-        adt.oversample(oversampling, X_train, y_train)
-    model_name = dict['model']
-    # train new model
-    try:
-        model = adt.train_model(model_name, X_train, y_train)
-    except Exception as e:
-        print("issue with new model")
-        response = {
-            'success': 0,
-            'error': str(e)
-        }
-        return jsonify(response)
-
-    response = adt.eval_and_report(model, X_test, y_test, len(X_train))
-    # response['size'] = len(X_train)
-    return jsonify(response)
-    # save model
-
-
 @app.route("/getdata/<dict>")
 def getdata(dict):
     #  remove tree image file
@@ -68,6 +21,7 @@ def getdata(dict):
     oversampling = result['oversampling']
     scaling = result['scaling']
     prediction = result['prediction']
+    cross_validate = result['cross_validate']
     response = {}
     model_name = adt.return_model_name(result)
     dataset_name = adt.get_dataset_name(result)
@@ -84,8 +38,16 @@ def getdata(dict):
         return jsonify(response)
 
     # populate X and y, split, oversample, scale data
-    X_train, X_test, y_train, y_test, X_features, X, y = adt.get_data(
-        dataset_name, oversampling, scaling, prediction)
+    if cross_validate:
+        X_train, X_test, y_train, y_test, X_features, X, y = adt.get_data(
+            dataset_name, prediction, scaling=scaling, oversampling=oversampling, scale_X=True)
+        if debug:
+            print("with cv X_train len is: ", len(X_train))
+    else:
+        X_train, X_test, y_train, y_test, X_features, X, y = adt.get_data(
+            dataset_name, prediction, oversampling=oversampling, scaling=scaling)
+        if debug:
+            print("without cv X_train len is: ", len(X_train))
 
     try:
         # if model doesn't exist, train new model
@@ -99,22 +61,37 @@ def getdata(dict):
         return jsonify(response)
 
     model = adt.load_model(model_name)
-    # metrics = adt.evaluate_model(
-    #     model, X_test, y_test, X_features, X_train, y_train)
-    response = adt.eval_and_report(
-        model, X_test, y_test, len(X_train), X_features, X, y)
+
+    # if debug:
+    #     print("in getdata: y_train: ",  y_train)
+    #     print("in getdata: y_test: ",  y_test)
+
+    if cross_validate:
+        # get cv_accuracy and pass it to eval_and_report
+        cv_accuracy,  precision, recall, f1 = adt.cross_validate(
+            model_name, X, y)
+        response = adt.eval_and_report(
+            model, X_test, y_test, len(X_train), X_features, X, y, cv_accuracy)
+    else:
+        response = adt.eval_and_report(
+            model, X_test, y_test, len(X_train), X_features, X, y)
 
     return jsonify(response)
+
+
+@app.route('/methodology')
+def methodology():
+    return render_template('methodology.html')
 
 
 @app.route('/models', methods=['POST', 'GET'])
 def models():
     return render_template("models.html")
 
-
-@app.route("/data")
-def data():
-    return render_template("data.html")
+#
+# @app.route("/data")
+# def data():
+#     return render_template("data.html")
 
 
 @app.route("/resources")
