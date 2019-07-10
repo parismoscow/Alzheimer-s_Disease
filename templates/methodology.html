@@ -78,13 +78,14 @@
           </h6>
           <br>
           <h5>Classification Algorithms</h5>
-          <h6> We trained and evaluated multiple classification algorithms: Random Forest, Logistic Regression, SVC and Deep Neural Networks.
-            For each classifier, we included different options for pre-processing the data using oversampling and scaling. Deep Neural Networks performed
-            poorely on this dataset, so we dropped those from the model selection.
-          </h6>
-          <br>
+          We trained and evaluated multiple classification algorithms: Random Forest, Logistic Regression, SVC and Deep Neural Networks.
+          For each classifier, we included different options for pre-processing the data using oversampling and scaling. Deep Neural Networks performed
+          poorely on this dataset, so we dropped those from the model selection.
+
+          <br><br>
           <h5>Feature Selection</h5>
-          <h6>Feature Selection was a key step. We focused on collecting rows that had a value in all of the selected features columns, and
+          <h6>
+            Feature Selection was a key step. We focused on collecting rows that had a value in all of the selected features columns, and
             dropped the rest. The more features we selected the fewer rows of data we had available to train the models. This highlighted the need
             for doing careful feature selection in order to increase the input data size while at the same time increasing the model accuracy. Features selection is
             also important in deciding which tests are
@@ -108,16 +109,16 @@
             We tested the hypothesis that changes over time (e.g. thickness of some regions of the brain as measured on the MRI scans) would be good predictors of AD. In order to test this hypothesis, we
             added new columns to the data tables that showed % changes over time as well as a rate of change over time. However, these columns did not
             prove to be better predictors compared to absolute values thickness. This is most likely due to high variation in the thickness results over time.
-          </h6>
-          <br><br>
-          <h3>Challenges Faced</h3>
-          <h6>The main TADPOLE spreadsheet consists of over 12,000 rows and 1,900 columns. Many of the columns contained missing
-            data as not all patients underwent the same testing procedures. The abundance of biomarkers made feature selection challenging.
-            In addition, the data was heavily imbalanced resulting in the need to use various oversampling techniques.
 
-            Data related to MRI and PET scan images showed some unexpected variations, most likely due to different calibrations of the measuring instruments
-            which made it more difficult for the models to rely on changes in MRI measurements over time as a predictor of AD.
-          </h6>
+            <br><br>
+            <h3>Challenges Faced</h3>
+            <h6>The main TADPOLE spreadsheet consists of over 12,000 rows and 1,900 columns. Many of the columns contained missing
+              data as not all patients underwent the same testing procedures. The abundance of biomarkers made feature selection challenging.
+              In addition, the data was heavily imbalanced resulting in the need to use various oversampling techniques.
+
+              Data related to MRI and PET scan images showed some unexpected variations, most likely due to different calibrations of the measuring instruments
+              which made it more difficult for the models to rely on changes in MRI measurements over time as a predictor of AD.
+            </h6><br><br>
         </div>
 
         <div class="col-lg-4">
