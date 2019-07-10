@@ -54,13 +54,16 @@
       <div class="row">
         <div class="col-lg-8" id="maptext">
 
-          <h3>About the Data</h3>
-          <h6>The Alzheimer's Disease data used in this project was used with permission by The Alzheimer's Disease Prediction
+
+          <h4>Our Approach</h4>
+
+          <!-- <h4>About the Data</h4> -->
+          <h6>The Alzheimer's Disease data for this project was used with permission by The Alzheimer's Disease Prediction
             of Longitudinal Evolution (<a href="https://tadpole.grand-challenge.org/Home/">TADPOLE</a>) challenge*.
           </h6>
 
           <h6>The data consists of individuals who have agreed to participate in the Alzheimer's Diease Neuroimaging
-            Initiative (ADNI). The provided features include various biomarkers taken from brain scans as well the results of
+            Initiative (ADNI). The provided features include various biomarkers taken from brain scans, blood and spinal fluid samples, as well as the results of
             cognitive tests. Patients are given one of the following diagnoses:
           </h6>
           <h6>
@@ -70,55 +73,70 @@
               <li>Dementia - probable Alzheimer's Disease</li>
 
             </ul>
+            We focused on using the TADPOLE dataset to predict:
           </h6>
-          <h3>Our Approach</h3>
-          <h6>We focused on using the TADPOLE dataset to predict current diagnosis based on the smallest subset of test available for each patient,
-            as well as predicting future onset of Alzheimer's disease for at risk patients. The latter is the more challenging problem
-            that woud allow researchers to identify those individuals who would develop AD later for evaluation of preventive treatments.
+          <h6>
+            <ul>
+              <li>current diagnosis (based on the smallest subset of test results available)</li>
+              <li>future onset of Alzheimer's disease for at risk patients</li>
+              <!-- <li>Dementia - probable Alzheimer's Disease</li> -->
+
+            </ul>
+            The latter is the more challenging problem that woud allow researchers to identify those individuals who would develop AD later for evaluation of preventive treatments.
+          </h6>
           </h6>
           <br>
-          <h5>Classification Algorithms</h5>
-          We trained and evaluated multiple classification algorithms: Random Forest, Logistic Regression, SVC and Deep Neural Networks.
-          For each classifier, we included different options for pre-processing the data using oversampling and scaling. Deep Neural Networks performed
-          poorely on this dataset, so we dropped those from the model selection.
-
-          <br><br>
-          <h5>Feature Selection</h5>
+          <h4>Classification Algorithms</h4>
+          <h6>
+            We trained and evaluated multiple classification algorithms: Random Forest, Logistic Regression, SVC and Deep Neural Networks.
+            For each classifier, we included different options for pre-processing the data using oversampling and scaling. Deep Neural Networks performed
+            poorely on this dataset, so we dropped those from the model selection.
+          </h6>
+          <br>
+          <h4>Feature Selection</h4>
           <h6>
             Feature Selection was a key step. We focused on collecting rows that had a value in all of the selected features columns, and
             dropped the rest. The more features we selected the fewer rows of data we had available to train the models. This highlighted the need
             for doing careful feature selection in order to increase the input data size while at the same time increasing the model accuracy. Features selection is
             also important in deciding which tests are
-            best predictors of current or future dementia since some of the tests are expensive and/or intrusive.
+            best predictors of current or future dementia since some of the tests are expensive and/or intrusive. For the purpose of features selection in our project,
+            tests were grouped by modality used (e.g. MRI, PET, cognitive tests)
+            and selecting a modality automatically selects all tests that are obtained with that modality.
             <br><br>
-            We used SelectKBest in addition to RandomForest feature importance list to identify those features that are best at predicting current and future
+            In addition to RandomForest feature importance listw we used SelectKBest to identify those features that are best at predicting current and future
             dementia diagnosis. Consistently, cognitive tests and PET scan (FDG and AV45) were ranked highest.
-            <br><br>
-            <h5>Cross Validation</h5>
+          </h6>
+
+          <br>
+          <h4>Cross Validation</h4>
+          <h6>
             To prevent overfitting by our models, we used K-fold cross validation (k=5) to verify the accuracy reported by our classifiers. The results
             reported by k-fold verification and our models were very similar.
-
-            <br><br>
-            <h5>Predicting Future Diagnosis</h5>
+          </h6>
+          <br>
+          <h4>Predicting Future Diagnosis</h4>
+          <h6>
             The more challenging problem is to predict future diagnosis of AD, which is to identify patients that are at risk for developing AD. To do this, we
             added a column to each patient's record that was set to the last diagnosis this patient received. Since patients were in the stud for multiple years,
-            in some cases this meant setting a value to AD years before it was diagnosed. Using this approach achived a remarkable accurac of close to 90% for predicting
+            in some cases this meant setting a value to AD years before it was diagnosed. Using this approach achived a remarkable accuracy of close to 90% for predicting
             AD, but the model also required a lot of features to make this prediction.
-            <br><br>
-            <h5>Changes in Values Over Time</h5>
-            We tested the hypothesis that changes over time (e.g. thickness of some regions of the brain as measured on the MRI scans) would be good predictors of AD. In order to test this hypothesis, we
+          </h6>
+          <br>
+          <h4>Changes in Values Over Time</h4>
+          <h6>
+            We tested the hypothesis that changes over time (e.g. thickness of some regions of the brain as measured on the MRI scans) would be good predictors of AD. We
             added new columns to the data tables that showed % changes over time as well as a rate of change over time. However, these columns did not
-            prove to be better predictors compared to absolute values thickness. This is most likely due to high variation in the thickness results over time.
+            prove to be better predictors compared to absolute values of thickness. This is most likely due to high variation in the measurements.
+          </h6>
+          <br>
+          <h4>Challenges Faced</h4>
+          <h6>The main TADPOLE spreadsheet consists of over 12,000 rows and 1,900 columns. Many of the columns contained missing
+            data as not all patients underwent the same testing procedures. The abundance of biomarkers made feature selection challenging.
+            In addition, the data was heavily imbalanced resulting in the need to use various oversampling techniques.
 
-            <br><br>
-            <h3>Challenges Faced</h3>
-            <h6>The main TADPOLE spreadsheet consists of over 12,000 rows and 1,900 columns. Many of the columns contained missing
-              data as not all patients underwent the same testing procedures. The abundance of biomarkers made feature selection challenging.
-              In addition, the data was heavily imbalanced resulting in the need to use various oversampling techniques.
-
-              Data related to MRI and PET scan images showed some unexpected variations, most likely due to different calibrations of the measuring instruments
-              which made it more difficult for the models to rely on changes in MRI measurements over time as a predictor of AD.
-            </h6><br><br>
+            Data related to MRI and PET scan images showed some unexpected variations, most likely due to different calibrations of the measuring instruments
+            which made it more difficult for the models to rely on changes in MRI measurements over time as a predictor of AD.
+          </h6><br><br>
         </div>
 
         <div class="col-lg-4">
@@ -134,11 +152,12 @@
 
       <footer>
         <small>Image credit: <a href="https://www.manchester.ac.uk">The University of Manchester</a></small>
-        <br><small>*Data used in preparation of this article were obtained from the Alzheimer’s Disease Neuroimaging Initiative (ADNI) database (adni.loni.usc.edu). As such, the investigators within the ADNI contributed to the design and
+        <br><br><small>*Data used in preparation of this article were obtained from the Alzheimer’s Disease Neuroimaging Initiative (ADNI) database (adni.loni.usc.edu). As such, the investigators within the ADNI contributed to the design and
           implementation
           of ADNI
           and/or provided data but did not participate in analysis or writing of this report. A complete listing of ADNI investigators can be found at:http://adni.loni.usc.edu/wp-content/uploads/how_to_apply/ADNI_Acknowledgement_List.pdf
         </small>
+        <br><br>
         <p>Team Members: Logan Caldwell, John Chambers, Jasmina Jovanovic, and Ediya Yumukoff</p>
 
       </footer>
